@@ -43,7 +43,7 @@ let night = true;
 //________BLOOM_POSTPROCESSING________
 let renderScene = new RenderPass( scene, camera );
                   // UnrealBloomPass( resolution, strength, radius, threshold )
-let bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 1, 0 );
+let bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 2, 1, 0.8 );
 
 let composer = new EffectComposer( renderer );
 			composer.addPass( renderScene );
@@ -67,7 +67,7 @@ let geom = new THREE.BoxBufferGeometry(1,1,1);
 
 
 
-let mat = new THREE.MeshPhongMaterial({color:0xeb00ff,/*emissive: new THREE.Color(0xeb00ff)*/});
+let mat = new THREE.MeshPhongMaterial({color:0xc4c4c4,/*emissive: new THREE.Color(0xeb00ff),*/shininess:150});
 let mesh = new THREE.Mesh(geom,mat);
 mesh.position.set(1,0,0);
 scene.add(mesh);
@@ -78,10 +78,14 @@ let mesh2 = new THREE.Mesh(geom,mat2);
 mesh2.position.set(-0.5,0,0);
 scene.add(mesh2);
 
-scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.2 ) );
+scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.5 ) );
 
 
-
+// const light = new THREE.PointLight(0x43c8e6, 1);
+// light.position.set(2, 2, 0);
+// scene.add(light);
+// const helper = new THREE.PointLightHelper(light);
+// scene.add(helper);
 //
 // setInterval(function(){
 //   if(mat.emissiveIntensity){
@@ -96,7 +100,7 @@ scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.2 ) );
 
 
 
-
+scene.background = new THREE.Color(0x00ff7d)
 
 
 
@@ -118,7 +122,7 @@ function setSizes() {
 
   camera.aspect = windowWidth / windowHeight;
   camera.updateProjectionMatrix();
-  composer.setSize( windowWidth, windowHeight );
+  composer.setSize( windowWidth*pixelRatio, windowHeight*pixelRatio );
 
 };
 
