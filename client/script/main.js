@@ -33,19 +33,15 @@ renderer.shadowMap.enabled = true;
 
 let night = true;
 //________BLOOM_POSTPROCESSING________
-let renderScene = new RenderPass( scene, camera );
-                  // UnrealBloomPass( resolution, strength, radius, threshold )
-let bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 2.5, 1, 0.45 );
+let renderScene = new RenderPass(scene, camera);
+// UnrealBloomPass( resolution, strength, radius, threshold )
+let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.5, 1, 0.45);
 
-let composer = new EffectComposer( renderer );
-			composer.addPass( renderScene );
-			composer.addPass( bloomPass );
+let composer = new EffectComposer(renderer);
+composer.addPass(renderScene);
+composer.addPass(bloomPass);
 
 // ________/BLOOM_POSTPROCESSING________
-
-
-
-
 
 
 
@@ -648,158 +644,162 @@ let testJson = `{
 	}
 }`
 
-  function MyJsonModelParser(json) {   //for database save, without material obj, onli material info
-    json = JSON.parse(json);
-    let parsed = {
-        type: 'model',
-        name: json.object.name,
-        childs: {},
-        position:[0,0,0],
-        lighting:[],
-      };
-      function MyJsonModelСonverter(parent, arr, geomArr) {
-        arr.forEach((item) => {
-          switch (item.type) {
-            case 'Group':
-              parent.childs[item.name] = {
-                type: 'group',
-                childs: {},
-              }
-              MyJsonModelСonverter(parent.childs[item.name], item.children, geomArr);
-              break;
-            case 'Mesh':
-              let geom;
-              geomArr.forEach((item2) => {
-                item2.uuid === item.geometry ? geom = item2 : false;
-              });
-              let mat = item.userData.material;
-              let shadows = {cast:true,receive:true};
-              if(item.userData.shadows){
-                let shadow = item.userData.shadows
-                shadow.cast ? shadows.cast = false : false;
-                shadow.receive ? shadows.receive = false : false;
-              };
+function MyJsonModelParser(json) { //for database save, without material obj, onli material info
+  json = JSON.parse(json);
+  let parsed = {
+    type: 'model',
+    name: json.object.name,
+    childs: {},
+    position: [0, 0, 0],
+    lighting: [],
+  };
 
-              parent.childs[item.name] = {
-                type: 'geometry',
-                material: mat,
-                json: geom,
-                shadows:shadows,
-              }
-              break;
-              case 'SpotLight':
-              let lightObj = item.userData;
-              lightObj.type = 'SpotLight';
-
-              parsed.lighting.push(lightObj)
-              break;
-            default:
+  function MyJsonModelСonverter(parent, arr, geomArr) {
+    arr.forEach((item) => {
+      switch (item.type) {
+        case 'Group':
+          parent.childs[item.name] = {
+            type: 'group',
+            childs: {},
           };
+          MyJsonModelСonverter(parent.childs[item.name], item.children, geomArr);
+          break;
+        case 'Mesh':
+          let geom;
+          geomArr.forEach((item2) => {
+            item2.uuid === item.geometry ? geom = item2 : false;
+          });
+          let mat = item.userData.material;
+          let shadows = {
+            cast: true,
+            receive: true
+          };
+          if (item.userData.shadows) {
+            let shadow = item.userData.shadows;
+            shadow.cast ? shadows.cast = false : false;
+            shadow.receive ? shadows.receive = false : false;
+          };
+
+          parent.childs[item.name] = {
+            type: 'geometry',
+            material: mat,
+            json: geom,
+            shadows: shadows,
+          };
+          break;
+        case 'SpotLight':
+          let lightObj = item.userData;
+          lightObj.type = 'SpotLight';
+
+          parsed.lighting.push(lightObj);
+          break;
+        default:
+      };
+    });
+  };
+  MyJsonModelСonverter(parsed, json.object.children, json.geometries, );
+  return parsed;
+};
+
+
+function MyModelParser(obj, parent, parsedModel) {
+  switch (obj.type) {
+    case 'model':
+      let model = new THREE.Group(); // Раньше было Object3D
+      if (obj.lighting[0] != undefined) {
+        obj.lighting.forEach((light) => {
+          MyLightParser(light, model, obj);
+          // model.attach(MyLightParser(light,model,obj)); //аттачит уже в функции
         });
       };
-      MyJsonModelСonverter(parsed, json.object.children, json.geometries,);
-      return parsed;
+      for (let child in obj.childs) {
+        MyModelParser(obj.childs[child], model, model);
+      };
+      model.position.set(obj.position[0], obj.position[1], obj.position[2]);
+      return model;
+      break;
+    case 'group':
+      let group = new THREE.Group(); // Раньше было Object3D
+      for (let child in obj.childs) {
+        MyModelParser(obj.childs[child], group, model);
+      };
+      parent.attach(group);
+      break;
+    case 'geometry':
+      let geometry = new THREE.BufferGeometryLoader().parse(obj.json);
+      let shadows = obj.shadows;
+      let mat = obj.material;
+      if (mat[0] === 'Glass') {
+        shadows.cast = shadows.receive = false;
+      };
+      let material = MATERIAL_LIB[mat[0]][mat[1]];
+      let mesh = new THREE.Mesh(geometry, material);
+
+      mesh.castShadow = obj.shadows.cast;
+      mesh.receiveShadow = obj.shadows.cast;
+      parent.attach(mesh);
+      break;
+    default:
   };
-
-
-  function MyModelParser(obj, parent, parsedModel) {
-    switch (obj.type) {
-      case 'model':
-        let model = new THREE.Group(); // Раньше было Object3D
-        if(obj.lighting[0]!=undefined){
-          obj.lighting.forEach((light)=>{
-            MyLightParser(light,model,obj)
-            // model.attach(MyLightParser(light,model,obj)); //аттачит уже в функции
-          });
-        };
-        for (let child in obj.childs) {
-          MyModelParser(obj.childs[child], model, model);
-        };
-        model.position.set(obj.position[0],obj.position[1],obj.position[2])
-        return model;
-        break;
-      case 'group':
-        let group = new THREE.Group(); // Раньше было Object3D
-        for (let child in obj.childs) {
-          MyModelParser(obj.childs[child], group, model);
-        };
-        parent.attach(group);
-        break;
-      case 'geometry':
-        let geometry = new THREE.BufferGeometryLoader().parse(obj.json);
-        let shadows = obj.shadows;
-        let mat = obj.material;
-        if (mat[0] === 'Glass') {
-          shadows.cast = shadows.receive = false;
-        };
-        let material = MATERIAL_LIB[mat[0]][mat[1]];
-        let mesh = new THREE.Mesh(geometry, material);
-
-        mesh.castShadow = obj.shadows.cast;
-        mesh.receiveShadow = obj.shadows.cast;
-        parent.attach(mesh);
-        break;
-      default:
-    };
-  };
+};
 
 
 
-function MyLightParser(lightSettings,model,modelSettings){
+function MyLightParser(lightSettings, model, modelSettings) {
   let color = lightSettings.color;
-  let rgb = `rgb(${color[0]},${color[1]},${color[2]})`
+  let rgb = `rgb(${color[0]},${color[1]},${color[2]})`;
   switch (lightSettings.type) {
     case 'SpotLight':
-        let spotLight = new THREE.SpotLight(rgb, lightSettings.intensity);
-        spotLight.castShadow = true;
+      let spotLight = new THREE.SpotLight(rgb, lightSettings.intensity);
+      spotLight.castShadow = true;
 
-        spotLight.position.set(lightSettings.position[0],lightSettings.position[1],lightSettings.position[2]);
+      spotLight.position.set(lightSettings.position[0], lightSettings.position[1], lightSettings.position[2]);
 
-        spotLight.angle = lightSettings.angle;
+      spotLight.angle = lightSettings.angle;
 
-        spotLight.penumbra = lightSettings.penumbra;
+      spotLight.penumbra = lightSettings.penumbra;
 
-        spotLight.distance = lightSettings.distance;
-        spotLight.target.position.set(lightSettings.position[0]+lightSettings.target[0],lightSettings.position[1]+lightSettings.target[1],lightSettings.position[2]+lightSettings.target[2]);
+      spotLight.distance = lightSettings.distance;
+      spotLight.target.position.set(lightSettings.position[0] + lightSettings.target[0], lightSettings.position[1] + lightSettings.target[1], lightSettings.position[2] + lightSettings.target[2]);
 
-        spotLight.shadow.mapSize.width = 512;//default
-        spotLight.shadow.mapSize.height = 512;//default
+      spotLight.shadow.mapSize.width = 512; //default
+      spotLight.shadow.mapSize.height = 512; //default
 
-        spotLight.shadow.camera.near = 0.1;//default
-        spotLight.shadow.camera.far = 20;//default
-        spotLight.shadow.camera.fov = 45;//default
+      spotLight.shadow.camera.near = 0.1; //default
+      spotLight.shadow.camera.far = 20; //default
+      spotLight.shadow.camera.fov = 45; //default
 
-        model.attach(spotLight);
-        model.attach(spotLight.target)
+      model.attach(spotLight);
+      model.attach(spotLight.target);
       break;
     default:
 
-  }
+  };
 
 
 };
 
 
-scene.add(new THREE.HemisphereLight(0xc8faff,0x616161,0.1));
+scene.add(new THREE.HemisphereLight(0xc8faff, 0x616161, 0.1));
 
 
 
 let loadModel = MyModelParser(MyJsonModelParser(testJson));
-scene.add(loadModel)
+scene.add(loadModel);
 
 
 
-let geom = new THREE.BoxBufferGeometry(1,1,1);
-let mat = new THREE.MeshBasicMaterial({color: 0x6100ff});
-let mesh = new THREE.Mesh(geom,mat);
-scene.add(mesh);
+// let geom = new THREE.BoxBufferGeometry(1,1,1);
+// let mat = new THREE.MeshBasicMaterial({color: 0x6100ff});
+// let mesh = new THREE.Mesh(geom,mat);
+// scene.add(mesh);
 
 
 
 
 
 setSizes();
-document.body.appendChild( renderer.domElement );
+document.body.appendChild(renderer.domElement);
 
 
 window.onresize = function() {
@@ -816,22 +816,23 @@ function setSizes() {
 
   camera.aspect = windowWidth / windowHeight;
   camera.updateProjectionMatrix();
-  composer.setSize( windowWidth*pixelRatio, windowHeight*pixelRatio );
+  composer.setSize(windowWidth * pixelRatio, windowHeight * pixelRatio);
 
 };
 
 
 
-var controls = new OrbitControls( camera, renderer.domElement );
-function animate() {
-        if(night){
-          composer.render();
-        }else{
-          renderer.render(scene, camera);
-        };
+var controls = new OrbitControls(camera, renderer.domElement);
 
-        //requestAnimationFrame( animate );
-        controls.update();
-			};
+function animate() {
+  if (night) {
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  };
+
+  //requestAnimationFrame( animate );
+  controls.update();
+};
 animate();
-setInterval(animate,1000/25)
+setInterval(animate, 1000 / 25);
