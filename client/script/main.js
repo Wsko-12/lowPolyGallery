@@ -440,9 +440,8 @@ let testJson = `{
 		"uuid": "330704F3-294F-4446-90C1-355D484326BF",
 		"type": "Group",
 		"name": "Model",
-		"position":[10,10,10],
 		"layers": 1,
-		"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,-0.115275,0,1],
+		"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,2.706912,-0.115275,0,1],
 		"children": [
 			{
 				"uuid": "B4BA544D-AA29-465B-801E-D8166DA6F07A",
@@ -579,6 +578,8 @@ let testJson = `{
 				"uuid": "C19D2CBC-C0E0-47B4-965B-4983843151F5",
 				"type": "Mesh",
 				"name": "NEW__Ground_beigeSand",
+				"castShadow": true,
+				"receiveShadow": true,
 				"userData": {
 					"name": "NEW__Ground_beigeSand",
 					"material": [
@@ -604,6 +605,45 @@ let testJson = `{
 				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
 				"geometry": "6DD4AF3E-B19E-42ED-B41F-FA4943598105",
 				"material": "64E916FD-421A-40AE-A532-3021A49F2A5D"
+			},
+			{
+				"uuid": "6C88E019-653E-4ACD-A3F3-6E052570D7DA",
+				"type": "SpotLight",
+				"name": "SpotLight",
+				"castShadow": true,
+				"userData": {
+          "color":[255,255,255],
+          "intensity":0.8,
+					"position": [-3.9,7,2,2],
+					"target": [0,-10,0],
+					"angle": 1,
+					"penumbra": 1,
+					"shadowSize": 512,
+          "distance":20
+				},
+				"layers": 1,
+				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,-3.960474,7.065069,2.222417,1],
+				"color": 16777215,
+				"intensity": 1,
+				"distance": 0,
+				"angle": 0.5,
+				"decay": 1,
+				"penumbra": 0,
+				"shadow": {
+					"camera": {
+						"uuid": "F7814A3E-5C4B-4703-B712-E1267F457E9A",
+						"type": "PerspectiveCamera",
+						"layers": 1,
+						"fov": 57.29578,
+						"zoom": 1,
+						"near": 0.5,
+						"far": 500,
+						"focus": 10,
+						"aspect": 1,
+						"filmGauge": 35,
+						"filmOffset": 0
+					}
+				}
 			}]
 	}
 }`
@@ -615,6 +655,7 @@ let testJson = `{
         name: json.object.name,
         childs: {},
         position:[0,0,0],
+        lighting:[],
       };
       function MyJsonModelСonverter(parent, arr, geomArr) {
         arr.forEach((item) => {
@@ -646,7 +687,12 @@ let testJson = `{
                 shadows:shadows,
               }
               break;
-              
+              case 'SpotLight':
+              let lightObj = item.userData;
+              lightObj.type = 'SpotLight';
+
+              parsed.lighting.push(lightObj)
+              break;
             default:
           };
         });
@@ -659,20 +705,25 @@ let testJson = `{
   function MyModelParser(obj, parent, parsedModel) {
     switch (obj.type) {
       case 'model':
-        let model = new THREE.Object3D();
-
+        let model = new THREE.Group(); // Раньше было Object3D
+        if(obj.lighting[0]!=undefined){
+          obj.lighting.forEach((light)=>{
+            MyLightParser(light,model,obj)
+            // model.attach(MyLightParser(light,model,obj)); //аттачит уже в функции
+          });
+        };
         for (let child in obj.childs) {
           MyModelParser(obj.childs[child], model, model);
         };
-
+        model.position.set(obj.position[0],obj.position[1],obj.position[2])
         return model;
         break;
       case 'group':
-        let group = new THREE.Object3D();
+        let group = new THREE.Group(); // Раньше было Object3D
         for (let child in obj.childs) {
           MyModelParser(obj.childs[child], group, model);
         };
-        parent.children.push(group);
+        parent.attach(group);
         break;
       case 'geometry':
         let geometry = new THREE.BufferGeometryLoader().parse(obj.json);
@@ -686,62 +737,65 @@ let testJson = `{
 
         mesh.castShadow = obj.shadows.cast;
         mesh.receiveShadow = obj.shadows.cast;
-        parent.children.push(mesh);
+        parent.attach(mesh);
         break;
       default:
     };
   };
 
-let loadModel = MyModelParser(MyJsonModelParser(testJson));
 
 
+function MyLightParser(lightSettings,model,modelSettings){
+  let color = lightSettings.color;
+  let rgb = `rgb(${color[0]},${color[1]},${color[2]})`
+  switch (lightSettings.type) {
+    case 'SpotLight':
+        let spotLight = new THREE.SpotLight(rgb, lightSettings.intensity);
+        spotLight.castShadow = true;
+
+        spotLight.position.set(lightSettings.position[0],lightSettings.position[1],lightSettings.position[2]);
+
+        spotLight.angle = lightSettings.angle;
+
+        spotLight.penumbra = lightSettings.penumbra;
+
+        spotLight.distance = lightSettings.distance;
+        spotLight.target.position.set(lightSettings.position[0]+lightSettings.target[0],lightSettings.position[1]+lightSettings.target[1],lightSettings.position[2]+lightSettings.target[2]);
+
+        spotLight.shadow.mapSize.width = 512;//default
+        spotLight.shadow.mapSize.height = 512;//default
+
+        spotLight.shadow.camera.near = 0.1;//default
+        spotLight.shadow.camera.far = 20;//default
+        spotLight.shadow.camera.fov = 45;//default
+
+        model.attach(spotLight);
+        model.attach(spotLight.target)
+      break;
+    default:
+
+  }
+
+
+};
 
 
 scene.add(new THREE.HemisphereLight(0xc8faff,0x616161,0.1));
 
 
 
-
-let spotLight = new THREE.SpotLight(0xffffff, 0.8);
-
-
-
-spotLight.position.set(-3.9,7.0,2.2);
-
-spotLight.castShadow = true;
-spotLight.angle = 1;
-
-spotLight.penumbra = 0.2;
-
-spotLight.distance = 20;
-
-
-spotLight.target.position.set(-3.9,0,2.2);
-
-
-spotLight.shadow.mapSize.width = 512;//
-spotLight.shadow.mapSize.height = 512;//
-
-spotLight.shadow.camera.near = 0.1;//
-spotLight.shadow.camera.far = 20;//
-spotLight.shadow.camera.fov = 45;//
-
-
-
-
-
-
-loadModel.add(spotLight);
-loadModel.add(spotLight.target);
-
-loadModel.position.set(0,0,0)
+let loadModel = MyModelParser(MyJsonModelParser(testJson));
 scene.add(loadModel)
 
 
 
+let geom = new THREE.BoxBufferGeometry(1,1,1);
+let mat = new THREE.MeshBasicMaterial({color: 0x6100ff});
+let mesh = new THREE.Mesh(geom,mat);
+scene.add(mesh);
 
 
-console.log(loadModel);
+
 
 
 setSizes();
@@ -769,9 +823,7 @@ function setSizes() {
 
 
 var controls = new OrbitControls( camera, renderer.domElement );
-
 function animate() {
-
         if(night){
           composer.render();
         }else{
