@@ -496,9 +496,7 @@ let testJson = `{
 				"receiveShadow": true,
 				"userData": {
 					"name": "Wood_White",
-					"material": [
-						"Wood",
-						"white"]
+					"material": ["Wood","white"]
 				},
 				"layers": 1,
 				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
@@ -509,7 +507,6 @@ let testJson = `{
 }`
 
 
-console.log(MyJsonModelParser(testJson))
 
 
   function MyJsonModelParser(json) {   //for database save, without material obj, onli material info
@@ -535,10 +532,18 @@ console.log(MyJsonModelParser(testJson))
                 item2.uuid === item.geometry ? geom = item2 : false;
               });
               let mat = item.userData.material;
+              let shadows = {cast:true,receive:true};
+              if(item.userData.shadows){
+                let shadow = item.userData.shadows
+                shadow.cast ? shadows.cast = false : false;
+                shadow.receive ? shadows.receive = false : false;
+              };
+
               parent.childs[item.name] = {
                 type: 'geometry',
                 material: mat,
                 json: geom,
+                shadows:shadows,
               }
               break;
             default:
@@ -570,9 +575,16 @@ console.log(MyJsonModelParser(testJson))
         break;
       case 'geometry':
         let geometry = new THREE.BufferGeometryLoader().parse(obj.json);
+        let shadows = obj.shadows;
         let mat = obj.material;
+        if (mat[0] === 'Glass') {
+          shadows.cast = shadows.receive = false;
+        };
         let material = MATERIAL_LIB[mat[0]][mat[1]];
         let mesh = new THREE.Mesh(geometry, material);
+
+        mesh.castShadow = obj.shadows.cast;
+        mesh.receiveShadow = obj.shadows.cast;
         parent.children.push(mesh);
         break;
       default:
