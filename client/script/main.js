@@ -25,7 +25,8 @@ import {
   OrbitControls
 } from './libs/ThreeJsLib/examples/jsm/controls/OrbitControls.js';
 
-
+import { NodePass } from './libs/ThreeJsLib/examples/jsm/nodes/postprocessing/NodePass.js';
+import * as Nodes from './libs/ThreeJsLib/examples/jsm/nodes/Nodes.js';
 
 
 
@@ -54,11 +55,51 @@ let bokehPass = new BokehPass(scene, camera, {
   height: window.innerHeight,
 });
 
+var nodepass = new NodePass();
+var nodepassFade = new NodePass();/////////////////////
+var screen = new Nodes.ScreenNode();
+
+
+var hue = new Nodes.FloatNode(0);
+var sataturation = new Nodes.FloatNode( 1 );
+var vibrance = new Nodes.FloatNode(0);
+var brightness = new Nodes.FloatNode( -0.065 );
+var contrast = new Nodes.FloatNode(2.2);
+
+var hueNode = new Nodes.ColorAdjustmentNode( screen, hue, Nodes.ColorAdjustmentNode.HUE );
+var satNode = new Nodes.ColorAdjustmentNode( hueNode, sataturation, Nodes.ColorAdjustmentNode.SATURATION );
+var vibranceNode = new Nodes.ColorAdjustmentNode( satNode, vibrance, Nodes.ColorAdjustmentNode.VIBRANCE );
+var brightnessNode = new Nodes.ColorAdjustmentNode( vibranceNode, brightness, Nodes.ColorAdjustmentNode.BRIGHTNESS );
+var contrastNode = new Nodes.ColorAdjustmentNode( brightnessNode, contrast, Nodes.ColorAdjustmentNode.CONTRAST );
+
+
+var color = new Nodes.ColorNode( 0x6ec99b );
+						var percent = new Nodes.FloatNode( 0.1 );
+
+						var fade = new Nodes.MathNode(
+							new Nodes.ScreenNode(),
+							color,
+							percent,
+							Nodes.MathNode.MIX
+						);
+
+						nodepassFade.input = fade;
+
+						nodepass.input = contrastNode;
+
+
+
 
 let composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
+
+
 composer.addPass(bloomPass);
+composer.addPass(nodepass);
+composer.addPass(nodepassFade);
 composer.addPass(bokehPass);
+
+
 
 
 // ________/BLOOM_POSTPROCESSING________
@@ -347,12 +388,7 @@ function animate() {
 
 
 
-
-
-
-
-
   controls.update();
 };
 animate();
-setInterval(animate, 1000 / 25);
+setInterval(animate, 1000 / 20);
