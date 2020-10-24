@@ -1,4 +1,4 @@
-import * as THREE from '../libs/three.module.js';
+import * as THREE from '../libs/ThreeJsLib/build/three.module.js';
 
 //rgb(179, 0, 0) #b0b0b0 #ffd200 #324e57 #6e6e6e
 const MATERIAL_LIB = {
@@ -87,7 +87,7 @@ const MATERIAL_LIB = {
   Plants:{
     darkGreen: new THREE.MeshPhongMaterial({color:0x185d34, shininess:120, side: THREE.DoubleSide}),
   },
-
+  MouseElement:new THREE.MeshBasicMaterial({transparent:true,opacity:0,wireframe:true,}),
 };
 
 

@@ -1,29 +1,29 @@
-import * as THREE from './libs/three.module.js';
+import * as THREE from './libs/ThreeJsLib/build/three.module.js';
 import * as GF from './myGeneralFunctions.js';
 import MATERIAL_LIB from './myItemsLib/materialLib.js';
 import MODELS_LIB_JSON from './myItemsLib/modelsLibJSON.js';
 
-import { GUI } from './libs/dat.gui.module.js';
 
 import {
   EffectComposer
-} from './libs/postprocessing/EffectComposer.js';
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/EffectComposer.js';
 import {
   RenderPass
-} from './libs/postprocessing/RenderPass.js';
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/RenderPass.js';
 import {
   ShaderPass
-} from './libs/postprocessing/ShaderPass.js';
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/ShaderPass.js';
 import {
   UnrealBloomPass
-} from './libs/postprocessing/UnrealBloomPass.js';
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-import { BokehPass } from './libs/postprocessing/BokehPass.js';
-
+import {
+  BokehPass
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/BokehPass.js';
 
 import {
   OrbitControls
-} from './libs/OrbitControls.js';
+} from './libs/ThreeJsLib/examples/jsm/controls/OrbitControls.js';
 
 
 
@@ -45,14 +45,14 @@ let renderScene = new RenderPass(scene, camera);
 // UnrealBloomPass( resolution, strength, radius, threshold )
 let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2, 1.2, 0.27);
 
-let bokehPass = new BokehPass( scene, camera, {
-					focus: 40,
-					aperture: 0.001,
-					maxblur: 0.01,
+let bokehPass = new BokehPass(scene, camera, {
+  focus: 40,
+  aperture: 0.001,
+  maxblur: 0.01,
 
-					width: window.innerWidth,
-					height: window.innerHeight,
-				});
+  width: window.innerWidth,
+  height: window.innerHeight,
+});
 
 
 let composer = new EffectComposer(renderer);
@@ -68,57 +68,32 @@ composer.addPass(bokehPass);
 
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
-function onMouseMove( event ) {
 
-	// calculate mouse position in normalized device coordinates
-	// (-1 to +1) for both components
+function onMouseMove(event) {
 
-	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+  // calculate mouse position in normalized device coordinates
+  // (-1 to +1) for both components
+
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
 };
 let focusSettings = {
-  focus:0,
-  speed:1,
+  focus: 0,
+  speed: 1,
+  inspected: [],
 };
 
-
-
-
-
-
-// let geom = new THREE.BoxBufferGeometry(1,1,1);
-//
-//
-//
-// let mat = new THREE.MeshPhongMaterial({color:0x0057ff,shininess:150,transparent:false,opacity:0.4});
-// let mesh = new THREE.Mesh(geom,mat);
-// mesh.position.set(1,0,0);
-// scene.add(mesh);
-//
-//
-// let mat2 = new THREE.MeshPhongMaterial({color:0xffed00,emissive: new THREE.Color(0xffed00),emissiveIntensity: 0,transparent:true,opacity:0.4});
-// let mesh2 = new THREE.Mesh(geom,mat2);
-// mesh2.position.set(-0.5,0,0);
-// scene.add(mesh2);
-//
-// scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ) );
-
-
-// const light = new THREE.PointLight(0x43c8e6, 1);
-// light.position.set(2, 2, 0);
-// scene.add(light);
-// const helper = new THREE.PointLightHelper(light);
-// scene.add(helper);
-//
-// setInterval(function(){
-//   if(mat.emissiveIntensity){
-//     mat.emissiveIntensity = 0;
-//   }else{
-//     mat.emissiveIntensity = 1;
-//   }
-//
-// },200)
+function findMouseObject() {
+  focusSettings.inspected = [];
+  scene.children.forEach((item) => {
+    if (item.type === 'Group') {
+      item.children.forEach((item2) => {
+        item2.name === 'MouseElement' ? focusSettings.inspected.push(item2) : false;
+      });
+    };
+  });
+};
 
 
 
@@ -153,14 +128,14 @@ function MyJsonModelParser(json) { //for database save, without material obj, on
             item2.uuid === item.geometry ? geom = item2 : false;
           });
           let mat;
-          if(item.userData.material){
+          if (item.userData.material) {
             mat = item.userData.material;
-          }else{
+          } else {
             mat = item.userData.name.split('_');
           };
           let shadows = {
             cast: true,
-            receive: true
+            receive: true,
           };
           if (item.userData.shadows) {
             let shadow = item.userData.shadows;
@@ -168,12 +143,20 @@ function MyJsonModelParser(json) { //for database save, without material obj, on
             shadow.receive ? shadows.receive = false : false;
           };
 
+
           parent.childs[item.name] = {
             type: 'geometry',
             material: mat,
             json: geom,
             shadows: shadows,
+            MouseElement: false,
           };
+          if (item.userData.name === 'MouseElement') {
+            parent.childs[item.name].shadows.cast = false;
+            parent.childs[item.name].shadows.receive = false;
+            parent.childs[item.name].MouseElement = true;
+          };
+
           break;
         case 'SpotLight':
           let lightObj = item.userData;
@@ -217,14 +200,23 @@ function MyModelParser(obj, parent, parsedModel) {
       let geometry = new THREE.BufferGeometryLoader().parse(obj.json);
       let shadows = obj.shadows;
       let mat = obj.material;
+
+      let material;
+      if (obj.MouseElement) {
+        material = MATERIAL_LIB.MouseElement;
+      } else {
+        material = MATERIAL_LIB[mat[0]][mat[1]];
+      };
+      let mesh = new THREE.Mesh(geometry, material);
+      obj.MouseElement ? mesh.name = 'MouseElement' : false;
+
       if (mat[0] === 'Glass' || mat[0] === 'Liquid' || mat[0] === 'Deep' || mat[0] === 'LightMaterial') {
         shadows.cast = shadows.receive = false;
-      };
-      let material = MATERIAL_LIB[mat[0]][mat[1]];
-      let mesh = new THREE.Mesh(geometry, material);
+      }
 
-      mesh.castShadow = obj.shadows.cast;
-      mesh.receiveShadow = obj.shadows.cast;
+      mesh.castShadow = shadows.cast;
+      mesh.receiveShadow = shadows.cast;
+
       parent.attach(mesh);
       break;
     default:
@@ -282,20 +274,18 @@ scene.add(loadModel);
 
 
 scene.background = new THREE.Color(0x090a12);
-//scene.fog = new THREE.Fog(0x090a12, 0.1, 150);
+scene.fog = new THREE.Fog(0x090a12, 0.1, 150);
 let skyLight = new THREE.HemisphereLight(0x394373, 0x616161, 0.3);
-let moonLight =  new THREE.DirectionalLight(0x94f3f6, 0.1);
-    moonLight.castShadow = true;
-    moonLight.position.set(30, 30, -30);
-    moonLight.target.position.set(0, 0, 0);
-    moonLight.shadow.camera.zoom = 0.1;
+let moonLight = new THREE.DirectionalLight(0x94f3f6, 0.1);
+moonLight.castShadow = true;
+moonLight.position.set(30, 30, -30);
+moonLight.target.position.set(0, 0, 0);
+moonLight.shadow.camera.zoom = 0.1;
 
 
 scene.add(moonLight);
 scene.add(moonLight.target);
 scene.add(skyLight);
-
-
 
 
 
@@ -310,7 +300,11 @@ document.body.appendChild(renderer.domElement);
 window.onresize = function() {
   setSizes();
 };
-window.addEventListener( 'mousemove', onMouseMove, false );
+window.addEventListener('mousemove', onMouseMove, false);
+
+
+
+
 
 function setSizes() {
   const windowWidth = window.innerWidth;
@@ -329,7 +323,8 @@ function setSizes() {
 
 
 var controls = new OrbitControls(camera, renderer.domElement);
-console.log(scene)
+findMouseObject();
+
 function animate() {
   if (night) {
     composer.render();
@@ -337,17 +332,16 @@ function animate() {
     renderer.render(scene, camera);
   };
 
-  //requestAnimationFrame( animate );
+  // requestAnimationFrame( animate );
 
 
   //______Raycaster_______
 
-  raycaster.setFromCamera( mouse, camera );
-  let intersects = raycaster.intersectObjects( scene.children[0].children );
-  for ( var i = 0; i < intersects.length; i++ ) {
-    //bokehPass.uniforms[ "focus" ].value =  intersects[0].distance
+  raycaster.setFromCamera(mouse, camera);
+  let intersects = raycaster.intersectObjects(focusSettings.inspected);
+  for (var i = 0; i < intersects.length; i++) {
     focusSettings.focus < intersects[0].distance ? focusSettings.focus += focusSettings.speed : focusSettings.focus -= focusSettings.speed;
-    bokehPass.uniforms[ "focus" ].value = focusSettings.focus;
+    bokehPass.uniforms["focus"].value = focusSettings.focus;
   };
   //______//Raycaster_______
 
