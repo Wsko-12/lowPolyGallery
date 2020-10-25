@@ -27,12 +27,47 @@ import {
   OrbitControls
 } from './libs/ThreeJsLib/examples/jsm/controls/OrbitControls.js';
 
-import { NodePass } from './libs/ThreeJsLib/examples/jsm/nodes/postprocessing/NodePass.js';
+import {
+  NodePass
+} from './libs/ThreeJsLib/examples/jsm/nodes/postprocessing/NodePass.js';
 import * as Nodes from './libs/ThreeJsLib/examples/jsm/nodes/Nodes.js';
 
 
 let stats = new Stats();
-document.body.appendChild( stats.dom );
+document.body.appendChild(stats.dom);
+
+
+let SceneParameters = {
+  composer: false,
+  sceneBackground: 0x000000,
+  postprocessing: {
+    common: false, //Если добавил хоть один, то true;
+    bloomPass: {
+      add: false,
+      strength: 2,
+      radius: 1,
+      threshold: 0.27,
+    },
+    nodepass: {
+      add: false,
+      hue: 0, //standart 0
+      sataturation: 0.8, //standart 1
+      vibrance: 0, //standart 0
+      brightness: -0.06, //standart 0
+      contrast: 2.2, //standart 1
+    },
+    nodepassFade: {
+      add: false,
+      color: 0xffffff, //standart 0xffffff
+      procent: 0.1, //standart 0.1
+    },
+    bokehPass: {
+      add: false,
+      aperture: 0.001, //standart 0.001
+      maxblur: 0.01, //standart 0.01
+    },
+  },
+};
 
 
 
@@ -50,67 +85,104 @@ renderer.shadowMap.enabled = true;
 
 let night = true;
 //________BLOOM_POSTPROCESSING________
+
+
+
+
+
+
+
+
+
 let renderScene = new RenderPass(scene, camera);
-// UnrealBloomPass( resolution, strength, radius, threshold )
-let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2, 1, 0.27);
-
-let bokehPass = new BokehPass(scene, camera, {
-  focus: 40,
-  aperture: 0.001,
-  maxblur: 0.01,
-
-  width: window.innerWidth,
-  height: window.innerHeight,
-});
-
-var nodepass = new NodePass();
-var nodepassFade = new NodePass();/////////////////////
-var screen = new Nodes.ScreenNode();
-
-
-var hue = new Nodes.FloatNode();
-var sataturation = new Nodes.FloatNode( 0.8);
-var vibrance = new Nodes.FloatNode(0);
-var brightness = new Nodes.FloatNode( -0.06 );
-var contrast = new Nodes.FloatNode(2.2);
-
-var hueNode = new Nodes.ColorAdjustmentNode( screen, hue, Nodes.ColorAdjustmentNode.HUE );
-var satNode = new Nodes.ColorAdjustmentNode( hueNode, sataturation, Nodes.ColorAdjustmentNode.SATURATION );
-var vibranceNode = new Nodes.ColorAdjustmentNode( satNode, vibrance, Nodes.ColorAdjustmentNode.VIBRANCE );
-var brightnessNode = new Nodes.ColorAdjustmentNode( vibranceNode, brightness, Nodes.ColorAdjustmentNode.BRIGHTNESS );
-var contrastNode = new Nodes.ColorAdjustmentNode( brightnessNode, contrast, Nodes.ColorAdjustmentNode.CONTRAST );
-
-
-var color = new Nodes.ColorNode( 0xffffff );
-						var percent = new Nodes.FloatNode( 0.1 );
-
-						var fade = new Nodes.MathNode(
-							new Nodes.ScreenNode(),
-							color,
-							percent,
-							Nodes.MathNode.MIX
-						);
-
-						nodepassFade.input = fade;
-
-						nodepass.input = contrastNode;
-
-
-
-
-let composer = new EffectComposer(renderer);
-composer.addPass(renderScene);
-
-
-composer.addPass(bloomPass);
-composer.addPass(nodepass);
-composer.addPass(nodepassFade);
-composer.addPass(bokehPass);
-
 
 
 
 // ________/BLOOM_POSTPROCESSING________
+
+let composer, bloomPass, bokehPass;
+
+function createPostprocessing() {
+  if (SceneParameters.postprocessing.common) {
+    composer = new EffectComposer(renderer);
+    composer.addPass(renderScene);
+  };
+
+
+  if (SceneParameters.postprocessing.bloomPass.add && SceneParameters.postprocessing.common) {
+    // UnrealBloomPass( resolution, strength, radius, threshold )
+    bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      SceneParameters.postprocessing.bloomPass.strength,
+      SceneParameters.postprocessing.bloomPass.radius,
+      SceneParameters.postprocessing.bloomPass.threshold);
+    composer.addPass(bloomPass);
+  };
+
+
+
+
+
+  if (SceneParameters.postprocessing.nodepass.add && SceneParameters.postprocessing.common) {
+    const nodepass = new NodePass();
+
+    const screen = new Nodes.ScreenNode();
+
+    const hue = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.hue || 0);
+    const sataturation = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.sataturation || 1);
+    const vibrance = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.vibrance || 0);
+    const brightness = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.brightness || 0);
+    const contrast = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.contrast || 1);
+
+    const hueNode = new Nodes.ColorAdjustmentNode(screen, hue, Nodes.ColorAdjustmentNode.HUE);
+    const satNode = new Nodes.ColorAdjustmentNode(hueNode, sataturation, Nodes.ColorAdjustmentNode.SATURATION);
+    const vibranceNode = new Nodes.ColorAdjustmentNode(satNode, vibrance, Nodes.ColorAdjustmentNode.VIBRANCE);
+    const brightnessNode = new Nodes.ColorAdjustmentNode(vibranceNode, brightness, Nodes.ColorAdjustmentNode.BRIGHTNESS);
+    const contrastNode = new Nodes.ColorAdjustmentNode(brightnessNode, contrast, Nodes.ColorAdjustmentNode.CONTRAST);
+    nodepass.input = contrastNode;
+    composer.addPass(nodepass);
+  };
+
+
+
+  let nodepassFade = new NodePass();
+  if (SceneParameters.postprocessing.nodepassFade.add && SceneParameters.postprocessing.common) {
+    const fade = new Nodes.MathNode(
+      new Nodes.ScreenNode(),
+      new Nodes.ColorNode(SceneParameters.postprocessing.nodepassFade.color || 0xffffff),
+      new Nodes.FloatNode(SceneParameters.postprocessing.nodepassFade.procent || 0.1),
+      Nodes.MathNode.MIX
+    );
+    nodepassFade.input = fade;
+    composer.addPass(nodepassFade);
+  };
+
+
+
+
+  if (SceneParameters.postprocessing.bokehPass.add && SceneParameters.postprocessing.common) {
+    bokehPass = new BokehPass(scene, camera, {
+      focus: 0,
+      aperture: SceneParameters.postprocessing.bokehPass.aperture || 0.001,
+      maxblur: SceneParameters.postprocessing.bokehPass.maxblur || 0.01,
+
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    composer.addPass(bokehPass);
+  };
+
+  if (SceneParameters.postprocessing.common) {
+    SceneParameters.composer = true;
+  };
+
+};
+
+createPostprocessing();
+
+
+
+
 
 
 
@@ -326,8 +398,13 @@ scene.background = new THREE.Color(0x090a12);
 scene.fog = new THREE.Fog(0x090a12, 0.1, 150);
 let skyLight = new THREE.HemisphereLight(0x394373, 0x616161, 0.2);
 let moonLight = new THREE.DirectionalLight(0x94f3f6, 0.15);
-let moon = new THREE.Mesh(new THREE.SphereBufferGeometry(2,10,10),new THREE.MeshPhongMaterial({color:0x94f3f6,emissiveIntensity:1,emissive: new THREE.Color(0x94f3f6),fog:false}));
-moon.position.set(30,15,-30);
+let moon = new THREE.Mesh(new THREE.SphereBufferGeometry(2, 10, 10), new THREE.MeshPhongMaterial({
+  color: 0x94f3f6,
+  emissiveIntensity: 1,
+  emissive: new THREE.Color(0x94f3f6),
+  fog: false
+}));
+moon.position.set(30, 15, -30);
 
 
 moonLight.castShadow = true;
@@ -369,7 +446,10 @@ function setSizes() {
 
   camera.aspect = windowWidth / windowHeight;
   camera.updateProjectionMatrix();
-  composer.setSize(windowWidth * pixelRatio, windowHeight * pixelRatio);
+  if (SceneParameters.composer) {
+    composer.setSize(windowWidth * pixelRatio, windowHeight * pixelRatio);
+  };
+
 
 };
 
@@ -379,7 +459,7 @@ var controls = new OrbitControls(camera, renderer.domElement);
 findMouseObject();
 
 function animate() {
-  if (night) {
+  if (SceneParameters.composer) {
     composer.render();
   } else {
     renderer.render(scene, camera);
@@ -387,15 +467,21 @@ function animate() {
   // requestAnimationFrame( animate );
   stats.update();
 
-  //______Raycaster_______
 
-  raycaster.setFromCamera(mouse, camera);
-  let intersects = raycaster.intersectObjects(focusSettings.inspected);
-  for (var i = 0; i < intersects.length; i++) {
-    focusSettings.focus < intersects[0].distance ? focusSettings.focus += focusSettings.speed : focusSettings.focus -= focusSettings.speed;
-    bokehPass.uniforms["focus"].value = focusSettings.focus;
+
+  //______Raycaster For BokehPass postprocessing_______
+
+  if (SceneParameters.composer && SceneParameters.postprocessing.bokehPass.add) {
+    raycaster.setFromCamera(mouse, camera);
+    let intersects = raycaster.intersectObjects(focusSettings.inspected);
+    for (var i = 0; i < intersects.length; i++) {
+      focusSettings.focus < intersects[0].distance ? focusSettings.focus += focusSettings.speed : focusSettings.focus -= focusSettings.speed;
+
+      bokehPass.uniforms["focus"].value = focusSettings.focus;
+    };
   };
-  //______//Raycaster_______
+
+  //______//Raycaster For BokehPass postprocessing______
 
 
 
