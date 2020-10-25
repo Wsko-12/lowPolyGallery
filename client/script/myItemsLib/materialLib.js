@@ -6,6 +6,7 @@ const MATERIAL_LIB = {
     warmYellow:  new THREE.MeshPhongMaterial({color:0x6e6e6e,emissive: new THREE.Color(0xffd200),emissiveIntensity: 1,transparent:false,opacity:0.7,fog:false}),
     pink:  new THREE.MeshPhongMaterial({color:0x6e6e6e,emissive: new THREE.Color(0xff007a),emissiveIntensity: 1,transparent:false,opacity:0.7,fog:false}),
     white:  new THREE.MeshPhongMaterial({color:0x6e6e6e,emissive: new THREE.Color(0xffffff),emissiveIntensity: 1,transparent:false,opacity:0.7,fog:false}),
+    blueTv:  new THREE.MeshPhongMaterial({color:0x6e6e6e,emissive: new THREE.Color(0x4968bb),emissiveIntensity: 1,transparent:false,opacity:0.7,fog:false}),
   },
 
   Concrete:{
@@ -43,7 +44,9 @@ const MATERIAL_LIB = {
   },
 
   Paper:{
+    white: new THREE.MeshPhongMaterial({color:0xd6d6d6, shininess:5}),
     brown: new THREE.MeshPhongMaterial({color:0x49341f, shininess:5}),
+    cardboard: new THREE.MeshPhongMaterial({color:0xa78859, shininess:5}),
   },
 
   Gum:{

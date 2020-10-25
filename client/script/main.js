@@ -3,6 +3,8 @@ import * as GF from './myGeneralFunctions.js';
 import MATERIAL_LIB from './myItemsLib/materialLib.js';
 import MODELS_LIB_JSON from './myItemsLib/modelsLibJSON.js';
 
+import Stats from './libs/ThreeJsLib/examples/jsm/libs/stats.module.js';
+
 
 import {
   EffectComposer
@@ -29,6 +31,12 @@ import { NodePass } from './libs/ThreeJsLib/examples/jsm/nodes/postprocessing/No
 import * as Nodes from './libs/ThreeJsLib/examples/jsm/nodes/Nodes.js';
 
 
+let stats = new Stats();
+document.body.appendChild( stats.dom );
+
+
+
+
 
 const scene = new THREE.Scene();
 
@@ -44,7 +52,7 @@ let night = true;
 //________BLOOM_POSTPROCESSING________
 let renderScene = new RenderPass(scene, camera);
 // UnrealBloomPass( resolution, strength, radius, threshold )
-let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2, 1.2, 0.27);
+let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2, 1, 0.27);
 
 let bokehPass = new BokehPass(scene, camera, {
   focus: 40,
@@ -60,10 +68,10 @@ var nodepassFade = new NodePass();/////////////////////
 var screen = new Nodes.ScreenNode();
 
 
-var hue = new Nodes.FloatNode(0);
-var sataturation = new Nodes.FloatNode( 1 );
+var hue = new Nodes.FloatNode();
+var sataturation = new Nodes.FloatNode( 0.8);
 var vibrance = new Nodes.FloatNode(0);
-var brightness = new Nodes.FloatNode( -0.065 );
+var brightness = new Nodes.FloatNode( -0.06 );
 var contrast = new Nodes.FloatNode(2.2);
 
 var hueNode = new Nodes.ColorAdjustmentNode( screen, hue, Nodes.ColorAdjustmentNode.HUE );
@@ -73,7 +81,7 @@ var brightnessNode = new Nodes.ColorAdjustmentNode( vibranceNode, brightness, No
 var contrastNode = new Nodes.ColorAdjustmentNode( brightnessNode, contrast, Nodes.ColorAdjustmentNode.CONTRAST );
 
 
-var color = new Nodes.ColorNode( 0x6ec99b );
+var color = new Nodes.ColorNode( 0xffffff );
 						var percent = new Nodes.FloatNode( 0.1 );
 
 						var fade = new Nodes.MathNode(
@@ -316,14 +324,18 @@ scene.add(loadModel);
 
 scene.background = new THREE.Color(0x090a12);
 scene.fog = new THREE.Fog(0x090a12, 0.1, 150);
-let skyLight = new THREE.HemisphereLight(0x394373, 0x616161, 0.3);
-let moonLight = new THREE.DirectionalLight(0x94f3f6, 0.1);
+let skyLight = new THREE.HemisphereLight(0x394373, 0x616161, 0.2);
+let moonLight = new THREE.DirectionalLight(0x94f3f6, 0.15);
+let moon = new THREE.Mesh(new THREE.SphereBufferGeometry(2,10,10),new THREE.MeshPhongMaterial({color:0x94f3f6,emissiveIntensity:1,emissive: new THREE.Color(0x94f3f6),fog:false}));
+moon.position.set(30,15,-30);
+
+
 moonLight.castShadow = true;
-moonLight.position.set(30, 30, -30);
+moonLight.position.set(30, 15, -30);
 moonLight.target.position.set(0, 0, 0);
 moonLight.shadow.camera.zoom = 0.1;
 
-
+scene.add(moon);
 scene.add(moonLight);
 scene.add(moonLight.target);
 scene.add(skyLight);
@@ -372,9 +384,8 @@ function animate() {
   } else {
     renderer.render(scene, camera);
   };
-
   // requestAnimationFrame( animate );
-
+  stats.update();
 
   //______Raycaster_______
 
