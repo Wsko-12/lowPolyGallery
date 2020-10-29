@@ -86,7 +86,7 @@ const SCENES = {
           procent: 0.1, //standart 0.1
         },
         bokehPass: {
-          add: false,
+          add: true,
           aperture: 0.001, //standart 0.001
           maxblur: 0.01, //standart 0.01
         },
@@ -111,6 +111,56 @@ const SCENES = {
       },
     },
     model: MODELS_LIB_JSON.LoneStarMotel,
+  },
+  LonelyTrailer: {
+    sceneParameters: {
+      composer: false,
+      postprocessing: {
+        common: true, //Если добавил хоть один, то true;
+        bloomPass: {
+          add: true,
+          strength: 2,
+          radius: 1,
+          threshold: 0.5,
+        },
+        nodepass: {
+          add: true,
+          hue: 0, //standart 0
+          sataturation: 0.7, //standart 1
+          vibrance: 0, //standart 0
+          brightness: -0.06, //standart 0
+          contrast: 1, //standart 1
+        },
+        nodepassFade: {
+          add: true,
+          color: 0xffffff, //standart 0xffffff
+          procent: 0.2, //standart 0.1
+        },
+        bokehPass: {
+          add: true,
+          aperture: 0.001, //standart 0.001
+          maxblur: 0.01, //standart 0.01
+        },
+      },
+      camera: {
+        position: [20, 20, 20],
+      },
+      scene: {
+        background:0x272e2b,//0x516a60
+        skyLight: [0x394373, 0x616161, 0.7],
+        skyObj: {
+          light: [0xfffcfe, 0.2],
+          position: [0, 20, 0],
+        },
+        fog: {
+          add:true,
+          type: 'FogExp2',
+          color: 0x272e2b,//0x738e83
+          density: 0.04,
+        },
+      },
+    },
+    model: MODELS_LIB_JSON.LonelyTrailer,
   },
 };
 

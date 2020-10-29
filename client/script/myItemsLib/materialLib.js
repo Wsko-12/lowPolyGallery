@@ -2,6 +2,9 @@ import * as THREE from '../libs/ThreeJsLib/build/three.module.js';
 
 //rgb(179, 0, 0) #b0b0b0 #ffd200 #324e57 #6e6e6e
 const MATERIAL_LIB = {
+  LightTrail:{
+    warmYellow:  new THREE.MeshPhongMaterial({color:0x6e6e6e,emissive: new THREE.Color(0xffd200),emissiveIntensity: 0.5,transparent:true,opacity:0.05,fog:true}),
+  },
   LightMaterial:{
     warmYellow:  new THREE.MeshPhongMaterial({color:0x6e6e6e,emissive: new THREE.Color(0xffd200),emissiveIntensity: 1,transparent:false,opacity:0.7,fog:false}),
     pink:  new THREE.MeshPhongMaterial({color:0x6e6e6e,emissive: new THREE.Color(0xff007a),emissiveIntensity: 1,transparent:false,opacity:0.7,fog:false}),
@@ -19,10 +22,12 @@ const MATERIAL_LIB = {
     red:  new THREE.MeshPhongMaterial({color:0xad0000,specular: 0x050000, shininess:40}),
     standart:  new THREE.MeshPhongMaterial({color:0xaf9f64,specular: 0x050000, shininess:40}),
     dark:  new THREE.MeshPhongMaterial({color:0x37230b,specular: 0x050000, shininess:40}),
+    veryDark:  new THREE.MeshPhongMaterial({color:0x262421,specular: 0x050000, shininess:40}),
   },
 
   Glass:{
     standart:  new THREE.MeshPhongMaterial({color:0x324e57,specular: 0xffffff,shininess:150,transparent:true,opacity:0.4}),
+    darkBlueNotOpasity: new THREE.MeshPhongMaterial({color:0x2a2847,specular: 0xffffff,shininess:150,transparent:false,}),
   },
 
   Metall:{
@@ -62,10 +67,12 @@ const MATERIAL_LIB = {
     green:  new THREE.MeshPhongMaterial({color:0x26471a, shininess:0, flatShading:true,}), //#26471a rgb(38, 71, 26)
     freshGreen:  new THREE.MeshPhongMaterial({color:0x217105, shininess:0, flatShading:true,}), //#217105 rgb(33, 113, 5)
     fallGreen:  new THREE.MeshPhongMaterial({color:0x6f750f, shininess:0, flatShading:true,}), //#6f750f rgb(111, 117, 15)
+    darkGreen:  new THREE.MeshPhongMaterial({color:0x1e291b, shininess:0, flatShading:true,}), //#26471a rgb(38, 71, 26)
 
   },
   Rock:{
     gray: new THREE.MeshPhongMaterial({color:0x505050,specular: 0x838383, shininess:5}),
+    darkGray: new THREE.MeshPhongMaterial({color:0x2d2d2d,specular: 0x838383, shininess:5}),
   },
 
   Asphalt:{
@@ -89,6 +96,8 @@ const MATERIAL_LIB = {
   },
   Plants:{
     darkGreen: new THREE.MeshPhongMaterial({color:0x185d34, shininess:120, side: THREE.DoubleSide}),
+    brownRed: new THREE.MeshPhongMaterial({color:0xa4624f, shininess:120, side: THREE.DoubleSide}),
+
   },
   MouseElement:new THREE.MeshBasicMaterial({transparent:true,opacity:0,wireframe:true,}),
 };

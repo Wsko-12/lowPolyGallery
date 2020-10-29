@@ -34,8 +34,8 @@ import {
 import * as Nodes from './libs/ThreeJsLib/examples/jsm/nodes/Nodes.js';
 
 
-let stats = new Stats();
-document.body.appendChild(stats.dom);
+// let stats = new Stats();
+// document.body.appendChild(stats.dom);
 
 let SceneParameters = {
   composer: false,
@@ -44,17 +44,18 @@ let SceneParameters = {
 
 let focusSettings = {
   focus: 0,
+  neededFocus:0,
   speed: 1,
   inspected: [],
 };
 
 
-
+let Current_Scene_Render = '';
 
 
 let scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(20, 1, 20, 400);
+const camera = new THREE.PerspectiveCamera(20, 1, 0.2, 100);
 camera.position.set(50, 50, 50);
 camera.lookAt(0, 0, 0);
 
@@ -185,9 +186,9 @@ function MyModelParser(obj, parent, parsedModel) {
       let mesh = new THREE.Mesh(geometry, material);
       obj.MouseElement ? mesh.name = 'MouseElement' : false;
 
-      if (mat[0] === 'Glass' || mat[0] === 'Liquid' || mat[0] === 'Deep' || mat[0] === 'LightMaterial') {
+      if (mat[0] === 'Glass' || mat[0] === 'Liquid' || mat[0] === 'Deep' || mat[0] === 'LightMaterial' || mat[0] === 'LightTrail') {
         shadows.cast = shadows.receive = false;
-      }
+      };
 
       mesh.castShadow = shadows.cast;
       mesh.receiveShadow = shadows.cast;
@@ -231,6 +232,7 @@ function MyLightParser(lightSettings, model, modelSettings) {
 
 };
 function DOWNLOAD_NEW_SCENE(sceneName) {
+  Current_Scene_Render = Current_Scene;
 
   SceneParameters = SCENES[sceneName].sceneParameters;
   scene = new THREE.Scene();
@@ -364,10 +366,6 @@ function createPostprocessing() {
 
 };
 
-setTimeout(function(){
-  DOWNLOAD_NEW_SCENE('LoneStarMotel');
-},2000);
-
 
 
 
@@ -378,6 +376,15 @@ function onMouseMove(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
+
+
+  if (SceneParameters.composer && SceneParameters.postprocessing.bokehPass.add) {
+        raycaster.setFromCamera(mouse, camera);
+        let intersects = raycaster.intersectObjects(focusSettings.inspected);
+        for (var i = 0; i < intersects.length; i++) {
+          focusSettings.neededFocus = intersects[0].distance;
+        };
+      };
 };
 function findMouseObject() {
   focusSettings.inspected = [];
@@ -406,7 +413,7 @@ function findMouseObject() {
 
 
 setSizes();
-document.body.appendChild(renderer.domElement);
+document.querySelector('#canvasSection').appendChild(renderer.domElement);
 
 
 window.onresize = function() {
@@ -438,7 +445,11 @@ function setSizes() {
 var controls = new OrbitControls(camera, renderer.domElement);
 
 
+DOWNLOAD_NEW_SCENE(Current_Scene);
 function animate() {
+  if(Current_Scene_Render != Current_Scene){
+    DOWNLOAD_NEW_SCENE(Current_Scene);
+  };
   if (SceneParameters.composer) {
     composer.render();
   } else {
@@ -446,20 +457,14 @@ function animate() {
   };
 
   // requestAnimationFrame( animate );
-  stats.update();
+  // stats.update();
 
 
 
   //______Raycaster For BokehPass postprocessing_______
-
   if (SceneParameters.composer && SceneParameters.postprocessing.bokehPass.add) {
-    raycaster.setFromCamera(mouse, camera);
-    let intersects = raycaster.intersectObjects(focusSettings.inspected);
-    for (var i = 0; i < intersects.length; i++) {
-      focusSettings.focus < intersects[0].distance ? focusSettings.focus += focusSettings.speed : focusSettings.focus -= focusSettings.speed;
-
-      bokehPass.uniforms["focus"].value = focusSettings.focus;
-    };
+    focusSettings.focus < focusSettings.neededFocus ? focusSettings.focus += focusSettings.speed : focusSettings.focus -= focusSettings.speed;
+    bokehPass.uniforms["focus"].value = focusSettings.focus;
   };
 
   //______//Raycaster For BokehPass postprocessing______

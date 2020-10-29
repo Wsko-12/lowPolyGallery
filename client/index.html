@@ -4,15 +4,34 @@
 <head>
   <meta charset="utf-8">
   <title>ZSL</title>
-
-
+  <script type="text/javascript" src="script/uxScript.js"></script>
   <script type="module" src="script/main.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Chela+One&family=Satisfy&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" rel="stylesheet">
+
 
 </head>
 
 <body>
-
-
+  <section class="fullSection" id="canvasSection"></section>
+  <section class="fullSection" id="articleSection" style="color:white">
+    <div class="arcticleMenu">
+      <div class="arcticleMenu-button" onclick="UI_ChangeScene(false)"></div>
+      <div class="arcticleMenu-center">
+        <div class="arcticleMenu-line" id="arcticleMenuLine">
+          <div class="arcticleMenu-item">
+            <div style="font-family: 'Staatliches', cursive;margin:10px auto 0px;font-size:1.2em;transform:translateX(-10%);">Foggy↟↟↟</div>
+            <div style="font-family: 'Staatliches', cursive;margin:-10px auto 2px;font-size:1.5em;">forest</div>
+          </div>
+          <div class="arcticleMenu-item">
+            <div style="font-family: 'Satisfy', cursive;margin:10px auto 0px;font-size:1.2em;transform:translateX(-10px);">Lone Star</div>
+            <div style="font-family: 'Chela One', cursive;margin:-10px auto 2px;font-size:1.5em;letter-spacing: 5px;transform:translateX(10px)">MOTEL</div>
+          </div>
+        </div>
+      </div>
+      <div class="arcticleMenu-button" onclick="UI_ChangeScene(true)"></div>
+    </div>
+  </section>
 
 
 
@@ -27,5 +46,59 @@
   canvas {
     display: block;
   }
+
+  .fullSection {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+  }
+
+  #canvasSection {
+    z-index: 1;
+  }
+
+  #articleSection {
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .arcticleMenu {
+    width: 200px;
+    height: 80px;
+    display: flex;
+    margin: 50px auto;
+
+  }
+
+  .arcticleMenu-button {
+    width: 8px;
+    height: 8px;
+    border-radius: 10px;
+    pointer-events: auto;
+    margin: auto;
+    background-color: white;
+    border: 1px solid white;
+  }
+
+  .arcticleMenu-center {
+    width: 150px;
+    height: 100%;
+    display: block;
+    overflow: hidden;
+  }
+
+  .arcticleMenu-line {
+    display: flex;
+    height: 100%;
+    justify-content: inherit;
+  }
+
+  .arcticleMenu-item {
+    width: 150px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 </style>
+
 </html>
