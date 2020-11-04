@@ -59,7 +59,7 @@ const MATERIAL_LIB = {
   },
 
   Ground:{
-    beigeSand:  new THREE.MeshPhongMaterial({color:0xd2b585, shininess:0, flatShading:true,}), //#d2b585 rgb(210, 181, 134)
+    beigeSand:  new THREE.MeshPhongMaterial({color:0xd2b585, shininess:0, flatShading:true,}), //beigeSand:  new THREE.MeshPhongMaterial({color:0xd2b585, shininess:0, flatShading:true,bumpMap:new THREE.TextureLoader().load( 'https://i.ibb.co/NVTv5zb/3235.jpg' ),bumpScale:0.1}),
     orangeSand:  new THREE.MeshPhongMaterial({color:0xa1361b, shininess:0, flatShading:true,}), //#a1361b rgb(161, 54, 27)
     redSand:  new THREE.MeshPhongMaterial({color:0x6a0101, shininess:0, flatShading:true,}), //#6a0101 rgb(106, 1, 1)
     dirt:  new THREE.MeshPhongMaterial({color:0x601d07, shininess:0, flatShading:true,}), //#601d07 rgb(95, 29, 7)
@@ -103,7 +103,8 @@ const MATERIAL_LIB = {
 };
 
 
-export default  MATERIAL_LIB
+export default  MATERIAL_LIB;
+
 
 //hemisphere up:138 216 255, down: 86 124 143
 //sun: 255 254 240
