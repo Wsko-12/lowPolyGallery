@@ -38,9 +38,7 @@ import * as Nodes from './libs/ThreeJsLib/examples/jsm/nodes/Nodes.js';
 // let stats = new Stats();
 // document.body.appendChild(stats.dom);
 
-let SceneParameters = {
-  composer: false,
-};
+
 
 
 let focusSettings = {
@@ -52,7 +50,6 @@ let focusSettings = {
 
 
 let Current_Scene_Render = '';
-
 
 let scene = new THREE.Scene();
 
@@ -72,7 +69,6 @@ renderer.shadowMap.enabled = true;
 
 
 let renderScene;
-
 let composer, bloomPass, bokehPass;
 
 
@@ -80,16 +76,19 @@ let composer, bloomPass, bokehPass;
 
 
 const SCENE_BUILDER = {
+  SceneParameters: {
+    composer: false,
+  },
   build(sceneName) {
     Current_Scene_Render = Current_Scene; //Current_Scene лежит в скрипте (не модульном) uxScript
-    SceneParameters = SCENES[sceneName].sceneParameters;
+    this.SceneParameters = SCENES[sceneName].sceneParameters;
     scene = new THREE.Scene();
 
-    let sceneSet = SceneParameters.scene;
+    let sceneSet = this.SceneParameters.scene;
     scene.background = new THREE.Color(sceneSet.background);
 
-    if (SceneParameters.scene.fog.add) {
-      switch (SceneParameters.scene.fog.type) {
+    if (this.SceneParameters.scene.fog.add) {
+      switch (this.SceneParameters.scene.fog.type) {
         case 'fog':
           scene.fog = new THREE.Fog(sceneSet.fog.color, sceneSet.fog.near, sceneSet.fog.far);
           break;
@@ -128,38 +127,38 @@ const SCENE_BUILDER = {
     findMouseObject();
 
 
-    camera.position.set(SceneParameters.camera.position[0], SceneParameters.camera.position[1], SceneParameters.camera.position[2])
-    if (SceneParameters.postprocessing.common) {
+    camera.position.set(this.SceneParameters.camera.position[0], this.SceneParameters.camera.position[1], this.SceneParameters.camera.position[2])
+    if (this.SceneParameters.postprocessing.common) {
       this.postprocessing();
     };
   },
   postprocessing() {
     renderScene = new RenderPass(scene, camera);
-    if (SceneParameters.postprocessing.common) {
+    if (this.SceneParameters.postprocessing.common) {
       composer = new EffectComposer(renderer);
       composer.addPass(renderScene);
     };
 
-    if (SceneParameters.postprocessing.bloomPass.add && SceneParameters.postprocessing.common) {
+    if (this.SceneParameters.postprocessing.bloomPass.add && this.SceneParameters.postprocessing.common) {
       // UnrealBloomPass( resolution, strength, radius, threshold )
       bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
-        SceneParameters.postprocessing.bloomPass.strength,
-        SceneParameters.postprocessing.bloomPass.radius,
-        SceneParameters.postprocessing.bloomPass.threshold);
+        this.SceneParameters.postprocessing.bloomPass.strength,
+        this.SceneParameters.postprocessing.bloomPass.radius,
+        this.SceneParameters.postprocessing.bloomPass.threshold);
       composer.addPass(bloomPass);
     };
 
-    if (SceneParameters.postprocessing.nodepass.add && SceneParameters.postprocessing.common) {
+    if (this.SceneParameters.postprocessing.nodepass.add && this.SceneParameters.postprocessing.common) {
       const nodepass = new NodePass();
 
       const screen = new Nodes.ScreenNode();
 
-      const hue = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.hue || 0);
-      const sataturation = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.sataturation || 1);
-      const vibrance = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.vibrance || 0);
-      const brightness = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.brightness || 0);
-      const contrast = new Nodes.FloatNode(SceneParameters.postprocessing.nodepass.contrast || 1);
+      const hue = new Nodes.FloatNode(this.SceneParameters.postprocessing.nodepass.hue || 0);
+      const sataturation = new Nodes.FloatNode(this.SceneParameters.postprocessing.nodepass.sataturation || 1);
+      const vibrance = new Nodes.FloatNode(this.SceneParameters.postprocessing.nodepass.vibrance || 0);
+      const brightness = new Nodes.FloatNode(this.SceneParameters.postprocessing.nodepass.brightness || 0);
+      const contrast = new Nodes.FloatNode(this.SceneParameters.postprocessing.nodepass.contrast || 1);
 
       const hueNode = new Nodes.ColorAdjustmentNode(screen, hue, Nodes.ColorAdjustmentNode.HUE);
       const satNode = new Nodes.ColorAdjustmentNode(hueNode, sataturation, Nodes.ColorAdjustmentNode.SATURATION);
@@ -171,30 +170,30 @@ const SCENE_BUILDER = {
     };
 
     let nodepassFade = new NodePass();
-    if (SceneParameters.postprocessing.nodepassFade.add && SceneParameters.postprocessing.common) {
+    if (this.SceneParameters.postprocessing.nodepassFade.add && this.SceneParameters.postprocessing.common) {
       const fade = new Nodes.MathNode(
         new Nodes.ScreenNode(),
-        new Nodes.ColorNode(SceneParameters.postprocessing.nodepassFade.color || 0xffffff),
-        new Nodes.FloatNode(SceneParameters.postprocessing.nodepassFade.procent || 0.1),
+        new Nodes.ColorNode(this.SceneParameters.postprocessing.nodepassFade.color || 0xffffff),
+        new Nodes.FloatNode(this.SceneParameters.postprocessing.nodepassFade.procent || 0.1),
         Nodes.MathNode.MIX
       );
       nodepassFade.input = fade;
       composer.addPass(nodepassFade);
     };
 
-    if (SceneParameters.postprocessing.bokehPass.add && SceneParameters.postprocessing.common) {
+    if (this.SceneParameters.postprocessing.bokehPass.add && this.SceneParameters.postprocessing.common) {
       bokehPass = new BokehPass(scene, camera, {
         focus: 0,
-        aperture: SceneParameters.postprocessing.bokehPass.aperture || 0.001,
-        maxblur: SceneParameters.postprocessing.bokehPass.maxblur || 0.01,
+        aperture: this.SceneParameters.postprocessing.bokehPass.aperture || 0.001,
+        maxblur: this.SceneParameters.postprocessing.bokehPass.maxblur || 0.01,
 
         width: window.innerWidth,
         height: window.innerHeight,
       });
       composer.addPass(bokehPass);
     };
-    if (SceneParameters.postprocessing.common) {
-      SceneParameters.composer = true;
+    if (this.SceneParameters.postprocessing.common) {
+      this.SceneParameters.composer = true;
     };
   },
 };
@@ -213,7 +212,7 @@ function onMouseMove(event) {
 
 
 
-  if (SceneParameters.composer && SceneParameters.postprocessing.bokehPass.add) {
+  if (SCENE_BUILDER.SceneParameters.composer && SCENE_BUILDER.SceneParameters.postprocessing.bokehPass.add) {
     raycaster.setFromCamera(mouse, camera);
     let intersects = raycaster.intersectObjects(focusSettings.inspected);
     for (var i = 0; i < intersects.length; i++) {
@@ -243,16 +242,10 @@ function findMouseObject() {
 
 setSizes();
 document.querySelector('#canvasSection').appendChild(renderer.domElement);
-
-
 window.onresize = function() {
   setSizes();
 };
 window.addEventListener('mousemove', onMouseMove, false);
-
-
-
-
 
 function setSizes() {
   const windowWidth = window.innerWidth;
@@ -264,35 +257,33 @@ function setSizes() {
 
   camera.aspect = windowWidth / windowHeight;
   camera.updateProjectionMatrix();
-  if (SceneParameters.composer) {
+  if (SCENE_BUILDER.SceneParameters.composer) {
     composer.setSize(windowWidth * pixelRatio, windowHeight * pixelRatio);
   };
 };
 
 
 
-var controls = new OrbitControls(camera, renderer.domElement);
 
+
+
+
+
+
+var controls = new OrbitControls(camera, renderer.domElement);
 
 function animate() {
   if (Current_Scene_Render != Current_Scene) {
     SCENE_BUILDER.build(Current_Scene);
   };
 
-
-  if (SceneParameters.composer) {
+  if (SCENE_BUILDER.SceneParameters.composer) {
     composer.render();
   } else {
     renderer.render(scene, camera);
   };
-
-  // requestAnimationFrame( animate );
-  // stats.update();
-
-
-
   //______Raycaster For BokehPass postprocessing_______
-  if (SceneParameters.composer && SceneParameters.postprocessing.bokehPass.add) {
+  if (SCENE_BUILDER.SceneParameters.composer && SCENE_BUILDER.SceneParameters.postprocessing.bokehPass.add) {
     focusSettings.focus < focusSettings.neededFocus ? focusSettings.focus += focusSettings.speed : focusSettings.focus -= focusSettings.speed;
     bokehPass.uniforms["focus"].value = focusSettings.focus;
   };
@@ -302,6 +293,11 @@ function animate() {
 
 
   controls.update();
+  // stats.update();
+
+
+
+  setTimeout(animate, 1000 / 20);
+  // requestAnimationFrame( animate );
 };
 animate();
-setInterval(animate, 1000 / 20);
