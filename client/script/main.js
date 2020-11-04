@@ -80,7 +80,7 @@ let composer, bloomPass, bokehPass;
 
 
 
-function MyJsonModelParser(json) { //for database save, without material obj, onli material info
+function MyParser_JsonToObject(json) { //for database save, without material obj, onli material info
   json = JSON.parse(json);
   let parsed = {
     type: 'model',
@@ -90,7 +90,7 @@ function MyJsonModelParser(json) { //for database save, without material obj, on
     lighting: [],
   };
 
-  function MyJsonModelСonverter(parent, arr, geomArr) {
+  function Сonverter(parent, arr, geomArr) {
     arr.forEach((item) => {
       switch (item.type) {
         case 'Group':
@@ -98,7 +98,7 @@ function MyJsonModelParser(json) { //for database save, without material obj, on
             type: 'group',
             childs: {},
           };
-          MyJsonModelСonverter(parent.childs[item.name], item.children, geomArr);
+          Сonverter(parent.childs[item.name], item.children, geomArr);
           break;
         case 'Mesh':
           let geom;
@@ -146,21 +146,22 @@ function MyJsonModelParser(json) { //for database save, without material obj, on
       };
     });
   };
-  MyJsonModelСonverter(parsed, json.object.children, json.geometries, );
+  Сonverter(parsed, json.object.children, json.geometries, );
   return parsed;
 };
-function MyModelParser(obj, parent, parsedModel) {
+
+function MyParser_ObjectToModel(obj, parent, parsedModel) {
   switch (obj.type) {
     case 'model':
       let model = new THREE.Group(); // Раньше было Object3D
       if (obj.lighting[0] != undefined) {
         obj.lighting.forEach((light) => {
-          MyLightParser(light, model, obj);
+          MyParser_LightTo3DObject(light, model, obj);
           // model.attach(MyLightParser(light,model,obj)); //аттачит уже в функции
         });
       };
       for (let child in obj.childs) {
-        MyModelParser(obj.childs[child], model, model);
+        MyParser_ObjectToModel(obj.childs[child], model, model);
       };
       model.position.set(obj.position[0], obj.position[1], obj.position[2]);
       return model;
@@ -168,7 +169,7 @@ function MyModelParser(obj, parent, parsedModel) {
     case 'group':
       let group = new THREE.Group(); // Раньше было Object3D
       for (let child in obj.childs) {
-        MyModelParser(obj.childs[child], group, model);
+        MyParser_ObjectToModel(obj.childs[child], group, model);
       };
       parent.attach(group);
       break;
@@ -198,7 +199,7 @@ function MyModelParser(obj, parent, parsedModel) {
     default:
   };
 };
-function MyLightParser(lightSettings, model, modelSettings) {
+function MyParser_LightTo3DObject(lightSettings, model, modelSettings) {
   let color = lightSettings.color;
   let rgb = `rgb(${color[0]},${color[1]},${color[2]})`;
   switch (lightSettings.type) {
@@ -231,8 +232,8 @@ function MyLightParser(lightSettings, model, modelSettings) {
 
 
 };
-function DOWNLOAD_NEW_SCENE(sceneName) {
-  Current_Scene_Render = Current_Scene;
+function BUILD_SCENE(sceneName) {
+  Current_Scene_Render = Current_Scene; //Current_Scene лежит в скрипте (не модульном) uxScript
 
   SceneParameters = SCENES[sceneName].sceneParameters;
   scene = new THREE.Scene();
@@ -276,7 +277,7 @@ function DOWNLOAD_NEW_SCENE(sceneName) {
   scene.add(skyObjLight);
   scene.add(skyObjLight.target);
 
-  let loadModel = MyModelParser(MyJsonModelParser(SCENES[sceneName].model));
+  let loadModel = MyParser_ObjectToModel(MyParser_JsonToObject(SCENES[sceneName].model));
   scene.add(loadModel);
   findMouseObject();
 
@@ -445,10 +446,10 @@ function setSizes() {
 var controls = new OrbitControls(camera, renderer.domElement);
 
 
-DOWNLOAD_NEW_SCENE(Current_Scene);
+BUILD_SCENE(Current_Scene);
 function animate() {
   if(Current_Scene_Render != Current_Scene){
-    DOWNLOAD_NEW_SCENE(Current_Scene);
+    BUILD_SCENE(Current_Scene);
   };
   if (SceneParameters.composer) {
     composer.render();
