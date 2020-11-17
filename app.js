@@ -10,7 +10,7 @@ function startServer() {
   });
 
   app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/client/index.html');
+    res.sendFile(__dirname + '/client/indexNew.html');
   });
 
   app.use(express.static(__dirname + '/client'));
