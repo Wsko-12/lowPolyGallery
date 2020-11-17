@@ -195,7 +195,7 @@ let user = {
 
     // user.mesh.rotation.y > user.vector_rad ? user.mesh.rotation.y -= user.rotationSpeed : user.mesh.rotation.y += user.rotationSpeed;
 
-    user.mesh.rotation.y = user.vector_rad;
+    // user.mesh.rotation.y = user.vector_rad;
 
   },
 };
