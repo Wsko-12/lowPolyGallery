@@ -179,10 +179,10 @@ let PLAYER = {
     z: 0,
   },
   move: {
-    speed: 0.05,
+    speed: 0.15,
     forward: false, // 1 is forward, -1 is backward;
     sideways: false, // -1 is right, 1 is left
-    rotationSpeed:5,
+    rotationSpeed:10,
   },
   vectors:{
     x:0,
@@ -275,32 +275,26 @@ function updatePlayerPosition(){
 
   };
 
-
+  PLAYER.moveVectorPosition.x = positions.x + (vectors.x);
+  PLAYER.moveVectorPosition.z = positions.z + (vectors.z);
 
   // ----Rotation----
-  PLAYER.moveVectorPosition.x = positions.x + (vectors.x*10);
-  PLAYER.moveVectorPosition.z = positions.z + (vectors.z*10);
-  let alpha = vectors.deg;
-  let x = Math.round((PLAYER.moveVectorPosition.x - positions.x)*1000);
-  let z = Math.round((PLAYER.moveVectorPosition.z - positions.z)*1000);
 
-  if(x == 0 & z < 0){//  ↑
-    alpha = 0;
-  };
+  let alpha = vectors.deg;
+  let x = Math.round((PLAYER.moveVectorPosition.x - positions.x)*10000);//10000 тк очень маленькие числа
+  let z = Math.round((PLAYER.moveVectorPosition.z - positions.z)*10000);
+
+  //alpha - угол, вектора персонажа(куда смотрит);
+
+
   if(x > 0 && z < 0){//  ↗
     alpha = GEN.TanToAngle(Math.abs(z/x))+270;
-  };
-  if(x > 0 && z == 0){// →
-    alpha = 270;
   };
   if(x > 0 && z > 0){// ↘
     alpha = GEN.TanToAngle(Math.abs(x/z))+180;
   };
-  if(vectors.x < 0 && vectors.z > 0){// ↙
+  if(x < 0 && z > 0){// ↙
     alpha = GEN.TanToAngle(Math.abs(z/x))+90;
-  };
-  if(x < 0 && z == 0){// ←
-    alpha = 90;
   };
   if(x < 0 && z < 0){// ↖
     alpha = GEN.TanToAngle(Math.abs(x/z));
@@ -308,18 +302,55 @@ function updatePlayerPosition(){
   if(x == 0 && z > 0){// ↓
     alpha = 180;
   };
+  if(x < 0 && z == 0){// ←
+    alpha = 90;
+  };
+  if(x > 0 && z == 0){// →
+    alpha = 270;
+  };
+  if(x == 0 & z < 0){//  ↑
+    alpha = 0;
+  };
+  alpha === 360 ? alpha = 0 : false;
 
+  //console.log(alpha, x, z);
+  //поворот персонажа на вектор направления;
+  let delta_r, delta_l;
 
+  //по часовой или против
+  if(alpha > vectors.deg){
+    delta_l = Math.abs(alpha - vectors.deg);
+    delta_r = 360 - Math.abs(alpha - vectors.deg)
+  }
+  if(vectors.deg > alpha){
+    delta_l = 360 - Math.abs(alpha - vectors.deg)
+    delta_r = Math.abs(alpha - vectors.deg);
+  }
 
+  //постепенный поворот
+  if(vectors.deg != alpha){
+    if(delta_l < delta_r){
+      if(delta_l < moves.rotationSpeed){
+        vectors.deg = alpha
+      }else{
+        vectors.deg += moves.rotationSpeed;
+      };
+      if(vectors.deg >= 360){
+        vectors.deg = 0 + moves.rotationSpeed;
+      };
+    }else{
+      if(delta_r < moves.rotationSpeed){
+        vectors.deg = alpha;
+      }else{
+        vectors.deg -= moves.rotationSpeed;
+      }
+      if(vectors.deg < 0){
+        vectors.deg = 360 - moves.rotationSpeed;
+      };
+    };
+  };
 
-
-
-  vectors.deg = alpha;
-
-
-
-
-
+  // ----//Rotation----
 
   //----Apply----
   let MESH = PLAYER.mesh;
@@ -338,8 +369,6 @@ function updatePlayerPosition(){
 
 
   MESH.rotation.y = vectors.deg * PI180;
-
-
 
   vectorMesh.position.x = PLAYER.moveVectorPosition.x;
   vectorMesh.position.z = PLAYER.moveVectorPosition.z;

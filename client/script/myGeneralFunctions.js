@@ -48,5 +48,8 @@ export function TanToAngle(tan){
     }else if(tan === TAN[i]){
       return i;
     }
+    if(i==TAN.length-1){
+      return 90;
+    }
   };
 };
