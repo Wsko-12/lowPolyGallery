@@ -1,4 +1,5 @@
 import * as THREE from './libs/ThreeJsLib/build/three.module.js';
+import * as GEN from './myGeneralFunctions.js';
 import {
   OrbitControls
 } from './libs/ThreeJsLib/examples/jsm/controls/OrbitControls.js';
@@ -32,8 +33,6 @@ let mouse = {
     h: 0,
   },
 };
-
-
 
 document.onmousemove = function(event) {
   mouse.position.x = event.clientX;
@@ -77,25 +76,28 @@ const playerView = {
     z: 0,
   },
   distance: 50,
-  rotationSpeed: 2,
+  rotationSpeed: 1.5,
   deg: 0,
   rad: 0,
 };
 
 function rotateView(bool) {
-  if (bool) {
-    if (playerView.deg + playerView.rotationSpeed < 360) {
-      playerView.deg += playerView.rotationSpeed;
+  if(bool != undefined){
+    if (bool) {
+      if (playerView.deg + playerView.rotationSpeed < 360) {
+        playerView.deg += playerView.rotationSpeed;
+      } else {
+        playerView.deg = 0;
+      };
     } else {
-      playerView.deg = 0;
-    }
-  } else {
-    if (playerView.deg - playerView.rotationSpeed > 0) {
-      playerView.deg -= playerView.rotationSpeed;
-    } else {
-      playerView.deg = 360 - playerView.rotationSpeed;
-    }
+      if (playerView.deg - playerView.rotationSpeed > 0) {
+        playerView.deg -= playerView.rotationSpeed;
+      } else {
+        playerView.deg = 360 - playerView.rotationSpeed;
+      };
+    };
   };
+
 
   let cameraShift_X, cameraShift_Z;
 
@@ -105,25 +107,31 @@ function rotateView(bool) {
 
 
 
-
   playerView.shift.x = cameraShift_X;
   playerView.shift.z = cameraShift_Z;
 
   CAMERA.position.x = playerView.position.x + playerView.shift.x;
   CAMERA.position.z = playerView.position.z + playerView.shift.z;
-  CAMERA.lookAt(0, 0, 0);
+  CAMERA.lookAt(PLAYER.position.x, PLAYER.position.y, PLAYER.position.z);
 };
+let cameraShift_X, cameraShift_Z;
 
-
+cameraShift_X = playerView.distance * Math.sin(playerView.deg * PI180);
+cameraShift_Z = playerView.distance * Math.cos(playerView.deg * PI180);
+playerView.shift.x = cameraShift_X;
+playerView.shift.z = cameraShift_Z;
+CAMERA.position.x = playerView.position.x + playerView.shift.x;
+CAMERA.position.z = playerView.position.z + playerView.shift.z;
+CAMERA.lookAt(0, 0, 0);
 
 
 function checkMousePosition() {
   if (mouse.position.x < mouse.windowSize.w / 8) {
-    rotateView(false)
-  }
+    rotateView(false);
+  };
   if (mouse.position.x > (mouse.windowSize.w / 8 * 7)) {
     rotateView(true);
-  }
+  };
 };
 
 
@@ -174,6 +182,7 @@ let PLAYER = {
     speed: 0.05,
     forward: false, // 1 is forward, -1 is backward;
     sideways: false, // -1 is right, 1 is left
+    rotationSpeed:5,
   },
   vectors:{
     x:0,
@@ -248,6 +257,9 @@ function updatePlayerPosition(){
   let moves = PLAYER.move;
   let vectors = PLAYER.vectors;
 
+
+
+  // ----Move----
   if(!!moves.forward){
     vectors.x = Math.sin((180+playerView.deg)*PI180)*moves.speed*moves.forward;
     vectors.z = Math.cos((180+playerView.deg)*PI180)*moves.speed*moves.forward;
@@ -262,20 +274,72 @@ function updatePlayerPosition(){
     }
 
   };
-  if(!!moves.forward || !!moves.sideways){
-    positions.x += vectors.x;
-    positions.z += vectors.z;
+
+
+
+  // ----Rotation----
+  PLAYER.moveVectorPosition.x = positions.x + (vectors.x*10);
+  PLAYER.moveVectorPosition.z = positions.z + (vectors.z*10);
+  let alpha = vectors.deg;
+  let x = Math.round((PLAYER.moveVectorPosition.x - positions.x)*1000);
+  let z = Math.round((PLAYER.moveVectorPosition.z - positions.z)*1000);
+
+  if(x == 0 & z < 0){//  ↑
+    alpha = 0;
+  };
+  if(x > 0 && z < 0){//  ↗
+    alpha = GEN.TanToAngle(Math.abs(z/x))+270;
+  };
+  if(x > 0 && z == 0){// →
+    alpha = 270;
+  };
+  if(x > 0 && z > 0){// ↘
+    alpha = GEN.TanToAngle(Math.abs(x/z))+180;
+  };
+  if(vectors.x < 0 && vectors.z > 0){// ↙
+    alpha = GEN.TanToAngle(Math.abs(z/x))+90;
+  };
+  if(x < 0 && z == 0){// ←
+    alpha = 90;
+  };
+  if(x < 0 && z < 0){// ↖
+    alpha = GEN.TanToAngle(Math.abs(x/z));
+  };
+  if(x == 0 && z > 0){// ↓
+    alpha = 180;
   };
 
 
 
+
+
+
+  vectors.deg = alpha;
+
+
+
+
+
+
+  //----Apply----
   let MESH = PLAYER.mesh;
-  MESH.position.x = positions.x;
-  MESH.position.z = positions.z;
+
+  if(vectors.deg == alpha){
+    if(!!moves.forward || !!moves.sideways){
+      positions.x += vectors.x;
+      positions.z += vectors.z;
+      MESH.position.x = positions.x;
+      MESH.position.z = positions.z;
+      playerView.position.x = positions.x;
+      playerView.position.z = positions.z;
+      rotateView();
+    };
+  };
 
 
-  PLAYER.moveVectorPosition.x = positions.x + (vectors.x*10);
-  PLAYER.moveVectorPosition.z = positions.z + (vectors.z*10);
+  MESH.rotation.y = vectors.deg * PI180;
+
+
 
   vectorMesh.position.x = PLAYER.moveVectorPosition.x;
   vectorMesh.position.z = PLAYER.moveVectorPosition.z;
@@ -302,6 +366,9 @@ function setSizes() {
   CAMERA.updateProjectionMatrix();
   mouse.windowSize.w = windowWidth;
   mouse.windowSize.h = windowHeight;
+
+  mouse.position.x = windowWidth/2;
+  mouse.position.y = windowHeight/2;
 };
 
 
