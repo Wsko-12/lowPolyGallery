@@ -82,7 +82,7 @@ const playerView = {
 };
 
 function rotateView(bool) {
-  if(bool != undefined){
+  if (bool != undefined) {
     if (bool) {
       if (playerView.deg + playerView.rotationSpeed < 360) {
         playerView.deg += playerView.rotationSpeed;
@@ -157,7 +157,9 @@ userMesh.add(bodyMesh);
 userMesh.add(weaponMesh);
 
 
-let vectorMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.2, 0.2, 0.2), new THREE.MeshBasicMaterial({color: 0xd40b79,})); // ___________HELPER___________
+let vectorMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.2, 0.2, 0.2), new THREE.MeshBasicMaterial({
+  color: 0xd40b79,
+})); // ___________HELPER___________
 vectorMesh.position.y = 1.5;
 SCENE.add(vectorMesh); // ___________HELPER___________
 
@@ -179,24 +181,27 @@ let PLAYER = {
     z: 0,
   },
   move: {
-    speed: 0.15,
+    speed: 0.2,
     forward: false, // 1 is forward, -1 is backward;
     sideways: false, // -1 is right, 1 is left
-    rotationSpeed:10,
+    rotationSpeed: 15,
   },
-  vectors:{
-    x:0,
-    y:0,
-    z:0,
-    deg:0,
-    rad:0,
+  vectors: {
+    x: 0,
+    y: 0,
+    z: 0,
+    deg: 0,
+    rad: 0,
   },
-  moveVectorPosition:{
-    x:0,
-    y:0,
-    z:10,
+  moveVectorPosition: {
+    x: 0,
+    y: 0,
+    z: 0,
+    stepAngle: 50, //угол, на который может наступить
+    step: 2, //сколько шагов от него вектор
+
   },
-  mesh:userMesh,
+  mesh: userMesh,
 
 };
 
@@ -215,163 +220,174 @@ function playerKeysEvents(event) {
     break;
 
 
-    case 'KeyS': {
-      if (event.type === 'keydown') {
-        PLAYER.move.forward = -1;
+  case 'KeyS': {
+    if (event.type === 'keydown') {
+      PLAYER.move.forward = -1;
 
-      } else if (event.type === 'keyup') {
-        PLAYER.move.forward = false;
-      };
-    }
-    break;
-
-
-    case 'KeyA': {
-      if (event.type === 'keydown') {
-        PLAYER.move.sideways = 1;
-
-      } else if (event.type === 'keyup') {
-        PLAYER.move.sideways = false;
-      };
-    }
-    break;
-
-
-    case 'KeyD': {
-      if (event.type === 'keydown') {
-        PLAYER.move.sideways = -1;
-
-      } else if (event.type === 'keyup') {
-        PLAYER.move.sideways = false;
-      };
+    } else if (event.type === 'keyup') {
+      PLAYER.move.forward = false;
     };
-    break;
+  }
+  break;
+
+
+  case 'KeyA': {
+    if (event.type === 'keydown') {
+      PLAYER.move.sideways = 1;
+
+    } else if (event.type === 'keyup') {
+      PLAYER.move.sideways = false;
+    };
+  }
+  break;
+
+
+  case 'KeyD': {
+    if (event.type === 'keydown') {
+      PLAYER.move.sideways = -1;
+
+    } else if (event.type === 'keyup') {
+      PLAYER.move.sideways = false;
+    };
+  };
+  break;
   };
 
 };
 
 
 
-function updatePlayerPosition(){
-  let positions = PLAYER.position;
-  let moves = PLAYER.move;
-  let vectors = PLAYER.vectors;
+function updatePlayerPosition() {
+  if (PLAYER.move.sideways || PLAYER.move.forward) {
+
+    let positions = PLAYER.position;
+    let moves = PLAYER.move;
+    let vectors = PLAYER.vectors;
 
 
 
-  // ----Move----
-  if(!!moves.forward){
-    vectors.x = Math.sin((180+playerView.deg)*PI180)*moves.speed*moves.forward;
-    vectors.z = Math.cos((180+playerView.deg)*PI180)*moves.speed*moves.forward;
-  };
-  if(!!moves.sideways){
-    if(!!moves.forward){
-      vectors.x += Math.cos((180-playerView.deg)*PI180)*moves.speed*moves.sideways;
-      vectors.z += Math.sin((180-playerView.deg)*PI180)*moves.speed*moves.sideways;
-    }else{
-      vectors.x = Math.cos((180-playerView.deg)*PI180)*moves.speed*moves.sideways;
-      vectors.z = Math.sin((180-playerView.deg)*PI180)*moves.speed*moves.sideways;
+    // ----Move----
+    if (!!moves.forward) {
+      vectors.x = Math.sin((180 + playerView.deg) * PI180) * moves.speed * moves.forward;
+      vectors.z = Math.cos((180 + playerView.deg) * PI180) * moves.speed * moves.forward;
+    };
+    if (!!moves.sideways) {
+      if (!!moves.forward) {
+        vectors.x += Math.cos((180 - playerView.deg) * PI180) * moves.speed * moves.sideways;
+        vectors.z += Math.sin((180 - playerView.deg) * PI180) * moves.speed * moves.sideways;
+      } else {
+        vectors.x = Math.cos((180 - playerView.deg) * PI180) * moves.speed * moves.sideways;
+        vectors.z = Math.sin((180 - playerView.deg) * PI180) * moves.speed * moves.sideways;
+      }
+
+    };
+
+
+
+    PLAYER.moveVectorPosition.x = positions.x + vectors.x * PLAYER.moveVectorPosition.step;
+    PLAYER.moveVectorPosition.z = positions.z + vectors.z * PLAYER.moveVectorPosition.step;
+    PLAYER.moveVectorPosition.y = positions.y + Math.tan(PLAYER.moveVectorPosition.stepAngle * PI180) * (moves.speed * PLAYER.moveVectorPosition.step);
+
+
+
+    // ----Rotation----
+
+    let alpha = vectors.deg;
+    let x = Math.round((PLAYER.moveVectorPosition.x - positions.x) * 10000); //10000 тк очень маленькие числа
+    let z = Math.round((PLAYER.moveVectorPosition.z - positions.z) * 10000);
+
+    //alpha - угол, вектора персонажа(куда смотрит);
+
+
+    if (x > 0 && z < 0) { //  ↗
+      alpha = GEN.TanToAngle(Math.abs(z / x)) + 270;
+    };
+    if (x > 0 && z > 0) { // ↘
+      alpha = GEN.TanToAngle(Math.abs(x / z)) + 180;
+    };
+    if (x < 0 && z > 0) { // ↙
+      alpha = GEN.TanToAngle(Math.abs(z / x)) + 90;
+    };
+    if (x < 0 && z < 0) { // ↖
+      alpha = GEN.TanToAngle(Math.abs(x / z));
+    };
+    if (x == 0 && z > 0) { // ↓
+      alpha = 180;
+    };
+    if (x < 0 && z == 0) { // ←
+      alpha = 90;
+    };
+    if (x > 0 && z == 0) { // →
+      alpha = 270;
+    };
+    if (x == 0 & z < 0) { //  ↑
+      alpha = 0;
+    };
+    alpha === 360 ? alpha = 0 : false;
+
+    //console.log(alpha, x, z);
+    //поворот персонажа на вектор направления;
+    let delta_r, delta_l;
+
+    //по часовой или против
+    if (alpha > vectors.deg) {
+      delta_l = Math.abs(alpha - vectors.deg);
+      delta_r = 360 - Math.abs(alpha - vectors.deg)
+    }
+    if (vectors.deg > alpha) {
+      delta_l = 360 - Math.abs(alpha - vectors.deg)
+      delta_r = Math.abs(alpha - vectors.deg);
     }
 
-  };
-
-  PLAYER.moveVectorPosition.x = positions.x + (vectors.x);
-  PLAYER.moveVectorPosition.z = positions.z + (vectors.z);
-
-  // ----Rotation----
-
-  let alpha = vectors.deg;
-  let x = Math.round((PLAYER.moveVectorPosition.x - positions.x)*10000);//10000 тк очень маленькие числа
-  let z = Math.round((PLAYER.moveVectorPosition.z - positions.z)*10000);
-
-  //alpha - угол, вектора персонажа(куда смотрит);
-
-
-  if(x > 0 && z < 0){//  ↗
-    alpha = GEN.TanToAngle(Math.abs(z/x))+270;
-  };
-  if(x > 0 && z > 0){// ↘
-    alpha = GEN.TanToAngle(Math.abs(x/z))+180;
-  };
-  if(x < 0 && z > 0){// ↙
-    alpha = GEN.TanToAngle(Math.abs(z/x))+90;
-  };
-  if(x < 0 && z < 0){// ↖
-    alpha = GEN.TanToAngle(Math.abs(x/z));
-  };
-  if(x == 0 && z > 0){// ↓
-    alpha = 180;
-  };
-  if(x < 0 && z == 0){// ←
-    alpha = 90;
-  };
-  if(x > 0 && z == 0){// →
-    alpha = 270;
-  };
-  if(x == 0 & z < 0){//  ↑
-    alpha = 0;
-  };
-  alpha === 360 ? alpha = 0 : false;
-
-  //console.log(alpha, x, z);
-  //поворот персонажа на вектор направления;
-  let delta_r, delta_l;
-
-  //по часовой или против
-  if(alpha > vectors.deg){
-    delta_l = Math.abs(alpha - vectors.deg);
-    delta_r = 360 - Math.abs(alpha - vectors.deg)
-  }
-  if(vectors.deg > alpha){
-    delta_l = 360 - Math.abs(alpha - vectors.deg)
-    delta_r = Math.abs(alpha - vectors.deg);
-  }
-
-  //постепенный поворот
-  if(vectors.deg != alpha){
-    if(delta_l < delta_r){
-      if(delta_l < moves.rotationSpeed){
-        vectors.deg = alpha
-      }else{
-        vectors.deg += moves.rotationSpeed;
-      };
-      if(vectors.deg >= 360){
-        vectors.deg = 0 + moves.rotationSpeed;
-      };
-    }else{
-      if(delta_r < moves.rotationSpeed){
-        vectors.deg = alpha;
-      }else{
-        vectors.deg -= moves.rotationSpeed;
-      }
-      if(vectors.deg < 0){
-        vectors.deg = 360 - moves.rotationSpeed;
+    //постепенный поворот
+    if (vectors.deg != alpha) {
+      if (delta_l < delta_r) {
+        if (delta_l < moves.rotationSpeed) {
+          vectors.deg = alpha
+        } else {
+          vectors.deg += moves.rotationSpeed;
+        };
+        if (vectors.deg >= 360) {
+          vectors.deg = 0 + moves.rotationSpeed;
+        };
+      } else {
+        if (delta_r < moves.rotationSpeed) {
+          vectors.deg = alpha;
+        } else {
+          vectors.deg -= moves.rotationSpeed;
+        }
+        if (vectors.deg < 0) {
+          vectors.deg = 360 - moves.rotationSpeed;
+        };
       };
     };
-  };
 
-  // ----//Rotation----
+    // ----//Rotation----
 
-  //----Apply----
-  let MESH = PLAYER.mesh;
+    //----Apply----
+    let MESH = PLAYER.mesh;
 
-  if(vectors.deg == alpha){
-    if(!!moves.forward || !!moves.sideways){
-      positions.x += vectors.x;
-      positions.z += vectors.z;
-      MESH.position.x = positions.x;
-      MESH.position.z = positions.z;
-      playerView.position.x = positions.x;
-      playerView.position.z = positions.z;
-      rotateView();
+    MESH.rotation.y = vectors.deg * PI180;
+    if (vectors.deg == alpha) {
+      if (!!moves.forward || !!moves.sideways) {
+        positions.x += vectors.x;
+        positions.z += vectors.z;
+        MESH.position.x = positions.x;
+        MESH.position.z = positions.z;
+        playerView.position.x = positions.x;
+        playerView.position.z = positions.z;
+        rotateView();
+
+      };
     };
+
+    vectorMesh.position.x = PLAYER.moveVectorPosition.x;
+    vectorMesh.position.z = PLAYER.moveVectorPosition.z;
+    vectorMesh.position.y = PLAYER.moveVectorPosition.y;
+
+
+
   };
-
-
-  MESH.rotation.y = vectors.deg * PI180;
-
-  vectorMesh.position.x = PLAYER.moveVectorPosition.x;
-  vectorMesh.position.z = PLAYER.moveVectorPosition.z;
 };
 
 
@@ -396,13 +412,13 @@ function setSizes() {
   mouse.windowSize.w = windowWidth;
   mouse.windowSize.h = windowHeight;
 
-  mouse.position.x = windowWidth/2;
-  mouse.position.y = windowHeight/2;
+  mouse.position.x = windowWidth / 2;
+  mouse.position.y = windowHeight / 2;
 };
 
 
 
-// var controls = new OrbitControls(camera, renderer.domElement);
+
 
 
 animate();
@@ -411,6 +427,6 @@ function animate() {
   checkMousePosition();
   updatePlayerPosition();
   RENDERER.render(SCENE, CAMERA);
-  // controls.update()
+  // setTimeout(animate,500);
   requestAnimationFrame(animate);
 }
