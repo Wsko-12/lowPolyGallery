@@ -22,7 +22,7 @@ const GRAVITY = {
 
 function checkGravity() {
   const fromPoint = new THREE.Vector3(PLAYER.position.x, PLAYER.position.y, PLAYER.position.z);
-  const toPoint = new THREE.Vector3(PLAYER.position.x, PLAYER.position.y - 2, PLAYER.position.z);
+  const toPoint = new THREE.Vector3(0,  - 1, 0);
 
 
 
