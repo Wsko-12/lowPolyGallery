@@ -265,17 +265,6 @@ export function updatePlayerPosition() {
           autoJump();
         }
 
-
-
-
-
-
-
-
-
-
-
-
       };
 
 

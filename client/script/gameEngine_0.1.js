@@ -9,6 +9,26 @@ import {
 import {
   OrbitControls
 } from './libs/ThreeJsLib/examples/jsm/controls/OrbitControls.js';
+import {
+  EffectComposer
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/EffectComposer.js';
+import {
+  RenderPass
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/RenderPass.js';
+import {
+  ShaderPass
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/ShaderPass.js';
+import {
+  UnrealBloomPass
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+import {
+  BokehPass
+} from './libs/ThreeJsLib/examples/jsm/postprocessing/BokehPass.js';
+
+
+
+
 const PI180 = 0.01745;
 
 
@@ -28,6 +48,16 @@ RENDERER.shadowMap.enabled = true;
 // SCENE.add(axesHelper);
 
 document.querySelector('#renderBody').appendChild(RENDERER.domElement);
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -222,6 +252,7 @@ export const PLAYER_VIEW = {
     z: 0.05,
   },
   distance: 50,
+  facticalDistance:0,
   rotationSpeed: 1.5,
   deg: 0,
   rad: 0,
@@ -278,7 +309,18 @@ export const PLAYER = {
 
 
 
+const composer = new EffectComposer(RENDERER);
+const renderScene = new RenderPass(SCENE, CAMERA);
+composer.addPass(renderScene);
+export const bokehPass = new BokehPass(SCENE, CAMERA, {
+  focus: 70,
+  aperture:  0.001,
+  maxblur:  0.01,
 
+  width: window.innerWidth,
+  height: window.innerHeight,
+});
+composer.addPass(bokehPass);
 
 
 
@@ -384,7 +426,7 @@ function setSizes() {
   CAMERA.updateProjectionMatrix();
   MOUSE.windowSize.w = windowWidth;
   MOUSE.windowSize.h = windowHeight;
-
+  composer.setSize(windowWidth * pixelRatio, windowHeight * pixelRatio);
   MOUSE.position.x = windowWidth / 2;
   MOUSE.position.y = windowHeight / 2;
 };
@@ -400,7 +442,8 @@ updatePlayerPosition();
 function animate() {
   checkMousePosition();
   updatePlayerPosition();
-  RENDERER.render(SCENE, CAMERA);
+  composer.render();
+  // RENDERER.render(SCENE, CAMERA);
   // setTimeout(animate,500);
   requestAnimationFrame(animate);
 }

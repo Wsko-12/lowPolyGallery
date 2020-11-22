@@ -1,4 +1,4 @@
-import {MOUSE,PLAYER,PLAYER_VIEW,CAMERA} from '../gameEngine_0.1.js';
+import {MOUSE,PLAYER,PLAYER_VIEW,CAMERA,bokehPass} from '../gameEngine_0.1.js';
 const PI180 = 0.01745;
 
 document.onmousemove = function(event) {
@@ -74,4 +74,18 @@ export function setCamera(bool) {
   CAMERA.position.z = PLAYER_VIEW.position.z + PLAYER_VIEW.shift.z;
   CAMERA.position.y = PLAYER_VIEW.position.y + PLAYER_VIEW.distance;
   CAMERA.lookAt(PLAYER.position.x, PLAYER_VIEW.smoothPoint.y, PLAYER.position.z);
+
+
+  // dinamic focus;
+  // let x = CAMERA.position.x - PLAYER.position.x;
+  // let y = CAMERA.position.y - (PLAYER.position.y+PLAYER.sizes.h/2);
+  // let z = CAMERA.position.z - PLAYER.position.z;
+  // PLAYER_VIEW.facticalDistance = Math.sqrt(x*x+y*y+z*z);
+  // bokehPass.uniforms["focus"].value = PLAYER_VIEW.facticalDistance;
+
+
+
+
+
+
 };
