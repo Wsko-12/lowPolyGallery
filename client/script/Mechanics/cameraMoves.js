@@ -23,7 +23,7 @@ document.addEventListener('touchend', {
     MOUSE.position.y = MOUSE.windowSize.h / 2;
   }
 });
-export function rotateCamera(bool) {
+export function setCamera(bool) {
   if (bool != undefined) {
     if (bool) {
       if (PLAYER_VIEW.deg + PLAYER_VIEW.rotationSpeed < 360) {
@@ -52,8 +52,26 @@ export function rotateCamera(bool) {
   PLAYER_VIEW.shift.x = cameraShift_X;
   PLAYER_VIEW.shift.z = cameraShift_Z;
 
+
+  if(PLAYER_VIEW.smoothPoint.y != PLAYER.position.y){
+    if(PLAYER_VIEW.smoothPoint.y < PLAYER.position.y){
+      if(PLAYER_VIEW.smoothPoint.y + PLAYER_VIEW.smoothPointSpeed.z > PLAYER.position.y){
+        PLAYER_VIEW.smoothPoint.y =  PLAYER.position.y;
+      }else{
+        PLAYER_VIEW.smoothPoint.y += PLAYER_VIEW.smoothPointSpeed.z;
+      };
+    }else{
+      if(PLAYER_VIEW.smoothPoint.y - PLAYER_VIEW.smoothPointSpeed.z < PLAYER.position.y){
+        PLAYER_VIEW.smoothPoint.y =  PLAYER.position.y;
+      }else{
+        PLAYER_VIEW.smoothPoint.y -= PLAYER_VIEW.smoothPointSpeed.z;
+      };
+    }
+
+  }
+
   CAMERA.position.x = PLAYER_VIEW.position.x + PLAYER_VIEW.shift.x;
   CAMERA.position.z = PLAYER_VIEW.position.z + PLAYER_VIEW.shift.z;
   CAMERA.position.y = PLAYER_VIEW.position.y + PLAYER_VIEW.distance;
-  CAMERA.lookAt(PLAYER.position.x, PLAYER.position.y, PLAYER.position.z);
+  CAMERA.lookAt(PLAYER.position.x, PLAYER_VIEW.smoothPoint.y, PLAYER.position.z);
 };

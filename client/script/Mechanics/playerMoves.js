@@ -9,7 +9,7 @@ import {
 } from '../gameEngine_0.1.js';
 import * as THREE from '../libs/ThreeJsLib/build/three.module.js';
 import {
-  rotateCamera
+  setCamera
 } from './cameraMoves.js';
 import * as GEN from '../myGeneralFunctions.js';
 const PI180 = 0.01745;
@@ -26,8 +26,8 @@ function checkGravity() {
     intersect: [],
   }
   const autoJump = {
-    start: new THREE.Vector3(PLAYER.position.x, PLAYER.position.y + PLAYER.sizes.h/2, PLAYER.position.z),
-    end: new THREE.Vector3(0, -PLAYER.sizes.h/2, 0),
+    start: new THREE.Vector3(PLAYER.position.x, PLAYER.position.y + 0.9, PLAYER.position.z),
+    end: new THREE.Vector3(0, -1, 0),
     intersect: [],
   };
 
@@ -56,7 +56,7 @@ function checkGravity() {
       PLAYER.move.jump.flagPeak = false;
     };
   };
-  const autoJumpRay =  new THREE.Raycaster(autoJump.start, autoJump.end, 0, PLAYER.sizes.h/2-0.05);
+  const autoJumpRay =  new THREE.Raycaster(autoJump.start, autoJump.end, 0, 0.85);
   autoJump.intersect = autoJumpRay.intersectObjects(STATIC_OBJECTS);
   if(!!autoJump.intersect[0]){
     PLAYER.position.y += autoJump.intersect[0].distance;
@@ -102,7 +102,7 @@ function checkGravity() {
     PLAYER_VIEW.position.y = PLAYER.position.y;
 
   };
-  rotateCamera();
+  setCamera();
 };
 
 export function updatePlayerPosition() {

@@ -1,7 +1,7 @@
 import * as THREE from './libs/ThreeJsLib/build/three.module.js';
 import * as GEN from './myGeneralFunctions.js';
 import {
-  rotateCamera
+  setCamera
 } from './Mechanics/cameraMoves.js';
 import {
   updatePlayerPosition
@@ -41,13 +41,34 @@ ground.receiveShadow = true;
 SCENE.add(ground);
 STATIC_OBJECTS.push(ground);
 
-let boxGeom = new THREE.BoxBufferGeometry(1, 1, 1);
-let box_01 = new THREE.Mesh(boxGeom, material);
-box_01.position.x = -2;
-SCENE.add(box_01);
-box_01.castShadow = true;
-box_01.receiveShadow = true;
-STATIC_OBJECTS.push(box_01);
+
+
+for(let i=0;i<20;i++){
+  let boxGeom = new THREE.BoxBufferGeometry(0.5, 1, 2);
+  let box = new THREE.Mesh(boxGeom, material);
+  box.position.x = -0.5*i;
+  box.position.y = 0.5*i;
+
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  STATIC_OBJECTS.push(box);
+};
+
+
+
+
+
+{
+  let boxGeom = new THREE.BoxBufferGeometry(5, 5, 5);
+  let box = new THREE.Mesh(boxGeom, material);
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  box.position.y = 0;
+  box.position.z = -4;
+  STATIC_OBJECTS.push(box);
+}
 
 
 
@@ -108,6 +129,21 @@ export const PLAYER_VIEW = {
     y: 0,
     z: 0,
   },
+  smoothPosition:{
+    x: 0,
+    y: 0,
+    z: 0,
+  },
+  smoothPoint:{
+    x: 0,
+    y: 0,
+    z: 0,
+  },
+  smoothPointSpeed:{
+    x: 0,
+    y: 0,
+    z: 0.05,
+  },
   distance: 50,
   rotationSpeed: 1.5,
   deg: 0,
@@ -140,7 +176,8 @@ export const PLAYER = {
       flag:false,
       vector:1,
       state:0,
-      strength:10,
+      strength:5,
+      autoJumpHeight:0.3
     },
   },
   vectors: {
@@ -170,14 +207,14 @@ export const PLAYER = {
 
 
 
-rotateCamera();
+setCamera();
 
 function checkMousePosition() {
   if (MOUSE.position.x < MOUSE.windowSize.w / 8) {
-    rotateCamera(false);
+    setCamera(false);
   };
   if (MOUSE.position.x > (MOUSE.windowSize.w / 8 * 7)) {
-    rotateCamera(true);
+    setCamera(true);
   };
 };
 
