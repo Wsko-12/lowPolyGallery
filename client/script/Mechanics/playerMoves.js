@@ -4,6 +4,7 @@ import {
   PLAYER_VIEW,
   CAMERA,
   STATIC_OBJECTS,
+  DINAMIC_OBJECTS,
   SCENE,
   vectorMesh,
 } from '../gameEngine_0.1.js';
@@ -33,6 +34,8 @@ function checkGravity() {
     end: new THREE.Vector3(0, 1, 0),
     intersect: [],
   };
+
+
 
   if (PLAYER.move.jump.flag) {
     let blockJumpFlag = false;
@@ -65,6 +68,7 @@ function checkGravity() {
 
   };
 
+  const OBJECTS = [STATIC_OBJECTS,DINAMIC_OBJECTS];
   const fallRay = new THREE.Raycaster(fall.start, fall.end, 0, 5);
   fall.intersect = fallRay.intersectObjects(STATIC_OBJECTS);
 
@@ -93,6 +97,7 @@ function checkGravity() {
         };
       };
   };
+
   const up = {
     start: new THREE.Vector3(PLAYER.position.x, PLAYER.position.y + 1, PLAYER.position.z),
     end: new THREE.Vector3(PLAYER.position.x, PLAYER.position.y, PLAYER.position.z),
@@ -121,6 +126,84 @@ function checkGravity() {
   };
   setCamera();
 };
+
+
+function makeVector(from,to){
+  return to.clone().sub(from).normalize();
+}
+
+
+
+function moveDinamicObject(object, vectors){
+  const widthRay ={
+    start:object.position,
+    end:new THREE.Vector3(object.position.x+vectors.x*10,object.position.y,object.position.z+vectors.z*10),
+  };
+  widthRay.direction = makeVector(widthRay.start,widthRay.end).negate();
+
+  let objectWidth, objectHeight;
+
+
+
+  const widthRayCast =  new THREE.Raycaster(widthRay.end, widthRay.direction, 0, 10);
+  widthRay.intersect = widthRayCast.intersectObject(object);
+  if(!!widthRay.intersect[0]){
+    objectWidth = widthRay.end.distanceTo(widthRay.start) - widthRay.intersect[0].distance;
+  };
+
+  const moveCast = {
+    start:object.position,
+    end:new THREE.Vector3(object.position.x+vectors.x,object.position.y,object.position.z+vectors.z),
+  };
+  moveCast.direction = makeVector(moveCast.start,moveCast.end);
+
+
+
+  const heightRay ={
+    start:object.position,
+    end:new THREE.Vector3(object.position.x,object.position.y-100,object.position.z),
+  };
+  heightRay.direction = makeVector(heightRay.end,heightRay.start);
+
+  const heightRayCast = new THREE.Raycaster(heightRay.end, heightRay.direction,0,100);
+  heightRay.intersect = heightRayCast.intersectObject(object);
+  if(!!heightRay.intersect[0]){
+    objectHeight = heightRay.end.distanceTo(heightRay.start) - heightRay.intersect[0].distance;
+  };
+
+
+  const gravityRay = {
+    start:object.position,
+    direction:new THREE.Vector3(0,-10,0),
+  };
+  const gravityRayCast = new THREE.Raycaster(gravityRay.start,gravityRay.direction,0,10);
+  gravityRay.intersect = gravityRayCast.intersectObjects(DINAMIC_OBJECTS);
+  if(!!gravityRay.intersect[0]){
+    console.log(gravityRay.intersect[0]);
+  };
+
+
+
+
+
+  const moveRayCast =  new THREE.Raycaster(moveCast.start, moveCast.direction, 0, objectWidth);
+  moveCast.intersect = moveRayCast.intersectObjects(STATIC_OBJECTS);
+  if(!!moveCast.intersect[0]){
+    return true;
+  }else{
+    object.position.x += vectors.x;
+    object.position.z += vectors.z;
+    return false;
+  };
+
+
+
+
+
+
+
+};
+
 
 export function updatePlayerPosition() {
   if (!PLAYER.move.jump.onAir) {
@@ -263,13 +346,16 @@ export function updatePlayerPosition() {
           moveBlockFlag = true;
         }else{
           autoJump();
-        }
-
+        };
       };
 
 
-
-
+      let dinamicObjects = [];
+      const dinamicObjectsRay = new THREE.Raycaster(moveRayVectors.start, moveRayVectors.direction, 0, PLAYER.move.speed*PLAYER.moveVectorPosition.step);
+      dinamicObjects = dinamicObjectsRay.intersectObjects(DINAMIC_OBJECTS);
+      if(!!dinamicObjects[0]){
+        moveBlockFlag = moveDinamicObject(dinamicObjects[0].object,vectors);
+      };
 
 
 

@@ -32,7 +32,9 @@ import {
 const PI180 = 0.01745;
 
 
-export const STATIC_OBJECTS = []
+export const STATIC_OBJECTS = [];
+export const DINAMIC_OBJECTS = [];
+
 
 
 export const SCENE = new THREE.Scene();
@@ -64,6 +66,7 @@ document.querySelector('#renderBody').appendChild(RENDERER.domElement);
 let material = new THREE.MeshPhongMaterial({
   color: 0xffffff,
 });
+
 let groundGeom = new THREE.BoxBufferGeometry(25, 1, 25);
 let ground = new THREE.Mesh(groundGeom, material);
 ground.position.y = -0.5;
@@ -175,6 +178,19 @@ for(let i=0;i<20;i++){
   box.castShadow = true;
   box.receiveShadow = true;
   STATIC_OBJECTS.push(box);
+}
+
+{
+  //box cline
+  let boxGeom = new THREE.BoxBufferGeometry(1, 1, 1);
+  let box = new THREE.Mesh(boxGeom, material);
+  box.position.z = 2;
+  box.position.x = 2;
+  box.position.y = 0.5;
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  DINAMIC_OBJECTS.push(box);
 }
 
 
@@ -329,10 +345,10 @@ composer.addPass(bokehPass);
 setCamera();
 
 function checkMousePosition() {
-  if (MOUSE.position.x < MOUSE.windowSize.w / 8) {
+  if (MOUSE.position.x < MOUSE.windowSize.w / 3) {
     setCamera(false);
   };
-  if (MOUSE.position.x > (MOUSE.windowSize.w / 8 * 7)) {
+  if (MOUSE.position.x > (MOUSE.windowSize.w / 3 * 2)) {
     setCamera(true);
   };
 };
