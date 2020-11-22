@@ -54,5 +54,6 @@ export function rotateCamera(bool) {
 
   CAMERA.position.x = PLAYER_VIEW.position.x + PLAYER_VIEW.shift.x;
   CAMERA.position.z = PLAYER_VIEW.position.z + PLAYER_VIEW.shift.z;
+  CAMERA.position.y = PLAYER_VIEW.position.y + PLAYER_VIEW.distance;
   CAMERA.lookAt(PLAYER.position.x, PLAYER.position.y, PLAYER.position.z);
 };

@@ -1,15 +1,21 @@
 import * as THREE from './libs/ThreeJsLib/build/three.module.js';
 import * as GEN from './myGeneralFunctions.js';
-import {rotateCamera} from './Mechanics/cameraMoves.js';
-import {updatePlayerPosition} from './Mechanics/playerMoves.js';
+import {
+  rotateCamera
+} from './Mechanics/cameraMoves.js';
+import {
+  updatePlayerPosition
+} from './Mechanics/playerMoves.js';
 import {
   OrbitControls
 } from './libs/ThreeJsLib/examples/jsm/controls/OrbitControls.js';
 const PI180 = 0.01745;
 
 
+export const STATIC_OBJECTS = []
 
-let SCENE = new THREE.Scene();
+
+export const SCENE = new THREE.Scene();
 SCENE.background = new THREE.Color(0x9fd8db);
 export const CAMERA = new THREE.PerspectiveCamera(20, 1, 0.2, 600);
 SCENE.add(CAMERA);
@@ -17,8 +23,8 @@ CAMERA.position.set(50, 50, 50);
 CAMERA.lookAt(0, 0, 0);
 const RENDERER = new THREE.WebGLRenderer();
 
-const axesHelper = new THREE.AxesHelper(100);
-SCENE.add(axesHelper);
+// const axesHelper = new THREE.AxesHelper(100);
+// SCENE.add(axesHelper);
 
 document.querySelector('#renderBody').appendChild(RENDERER.domElement);
 
@@ -28,9 +34,10 @@ let material = new THREE.MeshPhongMaterial({
   color: 0xffffff
 });
 let groundGeom = new THREE.BoxBufferGeometry(10, 1, 10);
-let ground = new THREE.Mesh(groundGeom, material);
-// ground.position.y = -0.5;
+export let ground = new THREE.Mesh(groundGeom, material);
+ground.position.y = -0.5;
 SCENE.add(ground);
+STATIC_OBJECTS.push(ground);
 SCENE.add(new THREE.HemisphereLight(0xdffffa, 0x4a4a4a, 1));
 
 let userMesh = new THREE.Group();
@@ -66,7 +73,7 @@ export const MOUSE = {
 export const PLAYER_VIEW = {
   position: {
     x: 0,
-    y: 50,
+    y: 0,
     z: 0,
   },
   shift: {
@@ -82,7 +89,7 @@ export const PLAYER_VIEW = {
 export const PLAYER = {
   position: {
     x: 0,
-    y: 0,
+    y: 10,
     z: 0,
   },
   rotation: {
@@ -95,6 +102,13 @@ export const PLAYER = {
     forward: false, // 1 is forward, -1 is backward;
     sideways: false, // -1 is right, 1 is left
     rotationSpeed: 15,
+    jump:{
+      onAir:false,// запрещает другие движения
+      strengt:9,
+      flag:false,
+      state:0,
+      end:true,
+    },
   },
   vectors: {
     x: 0,
@@ -108,7 +122,7 @@ export const PLAYER = {
     y: 0,
     z: 0,
     stepAngle: 50, //угол, на который может наступить
-    step: 2, //сколько шагов от него вектор
+    step: 3, //сколько шагов от него вектор
 
   },
   mesh: userMesh,
@@ -123,12 +137,8 @@ export const PLAYER = {
 
 
 
-
-
-
-
-
 rotateCamera();
+
 function checkMousePosition() {
   if (MOUSE.position.x < MOUSE.windowSize.w / 8) {
     rotateCamera(false);
@@ -150,11 +160,23 @@ document.addEventListener('keyup', playerKeysEvents);
 
 
 function playerKeysEvents(event) {
-  switch (event.code) {
 
-    case 'KeyW': {
+    switch (event.code) {
+      case 'KeyW': {
+        if (event.type === 'keydown') {
+          if (!PLAYER.position.fly) PLAYER.move.forward = 1;
+
+
+        } else if (event.type === 'keyup') {
+          PLAYER.move.forward = false;
+        };
+      }
+      break;
+
+
+    case 'KeyS': {
       if (event.type === 'keydown') {
-        PLAYER.move.forward = 1;
+        if (!PLAYER.position.fly) PLAYER.move.forward = -1;
 
       } else if (event.type === 'keyup') {
         PLAYER.move.forward = false;
@@ -163,39 +185,33 @@ function playerKeysEvents(event) {
     break;
 
 
-  case 'KeyS': {
-    if (event.type === 'keydown') {
-      PLAYER.move.forward = -1;
+    case 'KeyA': {
+      if (event.type === 'keydown') {
+        if (!PLAYER.position.fly) PLAYER.move.sideways = 1;
 
-    } else if (event.type === 'keyup') {
-      PLAYER.move.forward = false;
+      } else if (event.type === 'keyup') {
+        PLAYER.move.sideways = false;
+      };
+    }
+    break;
+
+
+    case 'KeyD': {
+      if (event.type === 'keydown') {
+        if (!PLAYER.position.fly) PLAYER.move.sideways = -1;
+
+      } else if (event.type === 'keyup') {
+        PLAYER.move.sideways = false;
+      };
     };
-  }
-  break;
+    break;
 
-
-  case 'KeyA': {
-    if (event.type === 'keydown') {
-      PLAYER.move.sideways = 1;
-
-    } else if (event.type === 'keyup') {
-      PLAYER.move.sideways = false;
     };
-  }
-  break;
-
-
-  case 'KeyD': {
-    if (event.type === 'keydown') {
-      PLAYER.move.sideways = -1;
-
-    } else if (event.type === 'keyup') {
-      PLAYER.move.sideways = false;
-    };
+  if(event.code === 'Space') {
+      if (event.type === 'keydown' && !PLAYER.move.jump.onAir){
+        PLAYER.move.jump.flag = true;
+      };
   };
-  break;
-  };
-
 };
 
 
@@ -234,6 +250,7 @@ function setSizes() {
 
 
 animate();
+updatePlayerPosition();
 
 function animate() {
   checkMousePosition();
