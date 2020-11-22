@@ -22,6 +22,7 @@ SCENE.add(CAMERA);
 CAMERA.position.set(50, 50, 50);
 CAMERA.lookAt(0, 0, 0);
 const RENDERER = new THREE.WebGLRenderer();
+RENDERER.shadowMap.enabled = true;
 
 // const axesHelper = new THREE.AxesHelper(100);
 // SCENE.add(axesHelper);
@@ -31,14 +32,35 @@ document.querySelector('#renderBody').appendChild(RENDERER.domElement);
 
 
 let material = new THREE.MeshPhongMaterial({
-  color: 0xffffff
+  color: 0xffffff,
 });
-let groundGeom = new THREE.BoxBufferGeometry(10, 1, 10);
-export let ground = new THREE.Mesh(groundGeom, material);
+let groundGeom = new THREE.BoxBufferGeometry(20, 1, 20);
+let ground = new THREE.Mesh(groundGeom, material);
 ground.position.y = -0.5;
+ground.receiveShadow = true;
 SCENE.add(ground);
 STATIC_OBJECTS.push(ground);
-SCENE.add(new THREE.HemisphereLight(0xdffffa, 0x4a4a4a, 1));
+
+let boxGeom = new THREE.BoxBufferGeometry(1, 1, 1);
+let box_01 = new THREE.Mesh(boxGeom, material);
+box_01.position.x = -2;
+SCENE.add(box_01);
+box_01.castShadow = true;
+box_01.receiveShadow = true;
+STATIC_OBJECTS.push(box_01);
+
+
+
+const sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.castShadow = true;
+sun.position.set(60, 60, 60);
+sun.target.position.set(0, 0, 0);
+sun.shadow.camera.zoom = 0.2;
+sun.shadow.mapSize.width = 512; //default
+sun.shadow.mapSize.height = 512; //default;
+SCENE.add(sun);
+SCENE.add(sun.target);
+SCENE.add(new THREE.HemisphereLight(0xdffffa, 0x4a4a4a, 0.3));
 
 let userMesh = new THREE.Group();
 let bodyMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.8, 1.8, 0.8), material);
@@ -51,7 +73,12 @@ weaponMesh.position.y = 0.9;
 
 userMesh.add(bodyMesh);
 userMesh.add(weaponMesh);
+weaponMesh.castShadow = true;
+weaponMesh.receiveShadow = true;
+bodyMesh.castShadow = true;
+bodyMesh.receiveShadow = true;
 SCENE.add(userMesh);
+
 
 
 export const vectorMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.2, 0.2, 0.2), new THREE.MeshBasicMaterial({
@@ -92,6 +119,10 @@ export const PLAYER = {
     y: 10,
     z: 0,
   },
+  sizes:{
+    w:0.8,
+    h:1.8,
+  },
   rotation: {
     x: 0,
     y: 0,
@@ -103,11 +134,13 @@ export const PLAYER = {
     sideways: false, // -1 is right, 1 is left
     rotationSpeed: 15,
     jump:{
-      onAir:false,// запрещает другие движения
-      strengt:9,
-      flag:false,
-      state:0,
+      onAir:false,
+      flagPeak:false,
       end:true,
+      flag:false,
+      vector:1,
+      state:0,
+      strength:10,
     },
   },
   vectors: {
@@ -164,9 +197,7 @@ function playerKeysEvents(event) {
     switch (event.code) {
       case 'KeyW': {
         if (event.type === 'keydown') {
-          if (!PLAYER.position.fly) PLAYER.move.forward = 1;
-
-
+          PLAYER.move.forward = 1;
         } else if (event.type === 'keyup') {
           PLAYER.move.forward = false;
         };
@@ -176,8 +207,7 @@ function playerKeysEvents(event) {
 
     case 'KeyS': {
       if (event.type === 'keydown') {
-        if (!PLAYER.position.fly) PLAYER.move.forward = -1;
-
+        PLAYER.move.forward = -1;
       } else if (event.type === 'keyup') {
         PLAYER.move.forward = false;
       };
@@ -187,8 +217,7 @@ function playerKeysEvents(event) {
 
     case 'KeyA': {
       if (event.type === 'keydown') {
-        if (!PLAYER.position.fly) PLAYER.move.sideways = 1;
-
+        PLAYER.move.sideways = 1;
       } else if (event.type === 'keyup') {
         PLAYER.move.sideways = false;
       };
@@ -198,8 +227,7 @@ function playerKeysEvents(event) {
 
     case 'KeyD': {
       if (event.type === 'keydown') {
-        if (!PLAYER.position.fly) PLAYER.move.sideways = -1;
-
+        PLAYER.move.sideways = -1;
       } else if (event.type === 'keyup') {
         PLAYER.move.sideways = false;
       };
@@ -208,8 +236,11 @@ function playerKeysEvents(event) {
 
     };
   if(event.code === 'Space') {
-      if (event.type === 'keydown' && !PLAYER.move.jump.onAir){
+      if (event.type === 'keydown' && !PLAYER.move.jump.onAir && PLAYER.move.jump.end){
         PLAYER.move.jump.flag = true;
+        PLAYER.move.jump.flagPeak = false;
+        PLAYER.move.jump.end = false;
+
       };
   };
 };

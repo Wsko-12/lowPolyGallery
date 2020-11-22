@@ -6,7 +6,6 @@ import {
   STATIC_OBJECTS,
   SCENE,
   vectorMesh,
-  ground
 } from '../gameEngine_0.1.js';
 import * as THREE from '../libs/ThreeJsLib/build/three.module.js';
 import {
@@ -16,45 +15,82 @@ import * as GEN from '../myGeneralFunctions.js';
 const PI180 = 0.01745;
 
 const GRAVITY = {
-  speed: 0.4,
+  speed: 0.3,
 }
 
 
 function checkGravity() {
-  const fromPoint = new THREE.Vector3(PLAYER.position.x, PLAYER.position.y, PLAYER.position.z);
-  const toPoint = new THREE.Vector3(0,  - 1, 0);
+  const fall = {
+    start: new THREE.Vector3(PLAYER.position.x, PLAYER.position.y, PLAYER.position.z),
+    end: new THREE.Vector3(0, -1, 0),
+    intersect: [],
+  }
+  const autoJump = {
+    start: new THREE.Vector3(PLAYER.position.x, PLAYER.position.y + PLAYER.sizes.h/2, PLAYER.position.z),
+    end: new THREE.Vector3(0, -PLAYER.sizes.h/2, 0),
+    intersect: [],
+  };
 
 
 
 
 
-  if(PLAYER.move.jump.flag){//во время прыжка;
+
+
+
+
+
+
+
+  if (PLAYER.move.jump.flag) {
     PLAYER.position.y += GRAVITY.speed;
-    PLAYER.move.jump.state++;
-    PLAYER.move.jump.end = false;
-    if(PLAYER.move.jump.state === PLAYER.move.jump.strengt){
-      PLAYER.move.jump.state = 0;
-      PLAYER.move.jump.flag = false;
+    PLAYER.move.jump.state += PLAYER.move.jump.vector;
+    if(PLAYER.move.jump.state === PLAYER.move.jump.strength){
+      PLAYER.move.jump.vector = -1;
+      PLAYER.move.jump.flagPeak = true;
     };
-  }else{
-    const raycaster = new THREE.Raycaster(fromPoint, toPoint, 0, 5);
-    const intersect = raycaster.intersectObjects(STATIC_OBJECTS);
-    if (intersect[0] === undefined) {
+    if(PLAYER.move.jump.state === 0){
+      PLAYER.move.jump.vector = 1;
+      PLAYER.move.jump.flag = false;
+      PLAYER.move.jump.end = true;
+      PLAYER.move.jump.flagPeak = false;
+    };
+  };
+  const autoJumpRay =  new THREE.Raycaster(autoJump.start, autoJump.end, 0, PLAYER.sizes.h/2-0.05);
+  autoJump.intersect = autoJumpRay.intersectObjects(STATIC_OBJECTS);
+  if(!!autoJump.intersect[0]){
+    PLAYER.position.y += autoJump.intersect[0].distance;
+  }
+
+  const fallRay = new THREE.Raycaster(fall.start, fall.end, 0, 5);
+  fall.intersect = fallRay.intersectObjects(STATIC_OBJECTS);
+
+  if (fall.intersect[0] === undefined) {
+    if (!PLAYER.move.jump.flagPeak) {
       PLAYER.position.y -= GRAVITY.speed;
+    }
+    if (PLAYER.move.jump.end) {
       PLAYER.move.jump.onAir = true;
-    } else {
-      if (intersect[0].distance > GRAVITY.speed) {
+    };
+  } else {
+    if (fall.intersect[0].distance > GRAVITY.speed) {
+      if (!PLAYER.move.jump.flagPeak) {
         PLAYER.position.y -= GRAVITY.speed;
+      }
+      if (PLAYER.move.jump.end) {
         PLAYER.move.jump.onAir = true;
-      } else {
-        PLAYER.position.y -= intersect[0].distance;
+      };
+    } else {
+      if (!PLAYER.move.jump.flagPeak) {
+        PLAYER.position.y -= fall.intersect[0].distance;
+      };
+
+      if (PLAYER.move.jump.end) {
         PLAYER.move.jump.onAir = false;
-        if(!PLAYER.move.jump.end){
-          PLAYER.move.jump.end = true;
-        };
       };
     };
   };
+
 
   //---Apply---
   const MESH = PLAYER.mesh;
@@ -62,16 +98,16 @@ function checkGravity() {
   PLAYER.moveVectorPosition.y = PLAYER.position.y + Math.tan(PLAYER.moveVectorPosition.stepAngle * PI180) * (PLAYER.move.speed * PLAYER.moveVectorPosition.step);
   vectorMesh.position.y = PLAYER.moveVectorPosition.y;
 
-  if(PLAYER.move.jump.end){
+  if (PLAYER.move.jump.end) {
     PLAYER_VIEW.position.y = PLAYER.position.y;
-    rotateCamera();
+
   };
+  rotateCamera();
 };
 
 export function updatePlayerPosition() {
-  if(!PLAYER.move.jump.onAir || PLAYER.move.jump.flag){
-    if (PLAYER.move.sideways || PLAYER.move.forward ) {
-
+  if (!PLAYER.move.jump.onAir) {
+    if (PLAYER.move.sideways || PLAYER.move.forward) {
       const positions = PLAYER.position;
       const moves = PLAYER.move;
       const vectors = PLAYER.vectors;
@@ -184,7 +220,6 @@ export function updatePlayerPosition() {
           MESH.position.z = positions.z;
           PLAYER_VIEW.position.x = positions.x;
           PLAYER_VIEW.position.z = positions.z;
-          rotateCamera();
         };
       };
 
