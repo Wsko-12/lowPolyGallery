@@ -34,7 +34,7 @@ document.querySelector('#renderBody').appendChild(RENDERER.domElement);
 let material = new THREE.MeshPhongMaterial({
   color: 0xffffff,
 });
-let groundGeom = new THREE.BoxBufferGeometry(20, 1, 20);
+let groundGeom = new THREE.BoxBufferGeometry(25, 1, 25);
 let ground = new THREE.Mesh(groundGeom, material);
 ground.position.y = -0.5;
 ground.receiveShadow = true;
@@ -44,7 +44,7 @@ STATIC_OBJECTS.push(ground);
 
 
 for(let i=0;i<20;i++){
-  let boxGeom = new THREE.BoxBufferGeometry(0.5, 1, 2);
+  let boxGeom = new THREE.BoxBufferGeometry(0.5, 1, 3);
   let box = new THREE.Mesh(boxGeom, material);
   box.position.x = -0.5*i;
   box.position.y = 0.5*i;
@@ -56,17 +56,94 @@ for(let i=0;i<20;i++){
 };
 
 
-
-
-
 {
-  let boxGeom = new THREE.BoxBufferGeometry(5, 5, 5);
+  //box 0.8 height
+  let boxGeom = new THREE.BoxBufferGeometry(3, 0.8, 3);
   let box = new THREE.Mesh(boxGeom, material);
   SCENE.add(box);
   box.castShadow = true;
   box.receiveShadow = true;
-  box.position.y = 0;
-  box.position.z = -4;
+  box.position.y = 0.4;
+  box.position.z =-4;
+  box.position.x =5;
+  STATIC_OBJECTS.push(box);
+}
+
+
+{
+  //box 2.5height
+  let boxGeom = new THREE.BoxBufferGeometry(3, 2.5, 3);
+  let box = new THREE.Mesh(boxGeom, material);
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  box.position.y = 1.25;
+  box.position.z =-4;
+  STATIC_OBJECTS.push(box);
+}
+{
+  //box 2.8height
+  let boxGeom = new THREE.BoxBufferGeometry(2, 2.8, 5);
+  let box = new THREE.Mesh(boxGeom, material);
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  box.position.y = 1.4;
+  box.position.z =-4;
+  box.position.x =-2;
+  STATIC_OBJECTS.push(box);
+}
+
+{
+  //box cline
+  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
+  let box = new THREE.Mesh(boxGeom, material);
+  box.rotation.z = 10*PI180;
+  box.position.z = 4;
+  box.position.x = -8;
+  box.position.y = 1;
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  STATIC_OBJECTS.push(box);
+}
+{
+  //box cline
+  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
+  let box = new THREE.Mesh(boxGeom, material);
+  box.rotation.z = 20*PI180;
+  box.position.z = 6;
+  box.position.x = -8;
+  box.position.y = 1;
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  STATIC_OBJECTS.push(box);
+}
+{
+  //box cline
+  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
+  let box = new THREE.Mesh(boxGeom, material);
+  box.rotation.z = 30*PI180;
+  box.position.z = 8;
+  box.position.x = -8;
+  box.position.y = 1;
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  STATIC_OBJECTS.push(box);
+}
+{
+  //box cline
+  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
+  let box = new THREE.Mesh(boxGeom, material);
+  box.rotation.z = 40*PI180;
+  box.position.z = 10;
+  box.position.x = -8;
+  box.position.y = 1.5;
+  SCENE.add(box);
+  box.castShadow = true;
+  box.receiveShadow = true;
   STATIC_OBJECTS.push(box);
 }
 
@@ -177,7 +254,7 @@ export const PLAYER = {
       vector:1,
       state:0,
       strength:5,
-      autoJumpHeight:0.3
+      autoJumpHeight:0.6,
     },
   },
   vectors: {
@@ -191,8 +268,8 @@ export const PLAYER = {
     x: 0,
     y: 0,
     z: 0,
-    stepAngle: 50, //угол, на который может наступить
-    step: 3, //сколько шагов от него вектор
+    stepAngle: 55, //угол, на который может наступить
+    step: 5, //сколько шагов от него вектор
 
   },
   mesh: userMesh,
