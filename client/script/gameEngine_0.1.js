@@ -278,6 +278,8 @@ export const PLAYER = {
     x: 0,
     y: 10,
     z: 0,
+    deg:0,
+    block:false,
   },
   sizes:{
     w:0.8,
@@ -294,14 +296,13 @@ export const PLAYER = {
     sideways: false, // -1 is right, 1 is left
     rotationSpeed: 15,
     jump:{
-      onAir:false,
-      flagPeak:false,
-      end:true,
       flag:false,
+      flagPeak:true,
+      flagEnd:true,
+      status:0,
+      strength:5,//min 5:max 10 лучше всего
       vector:1,
-      state:0,
-      strength:5,
-      autoJumpHeight:0.6,
+
     },
   },
   vectors: {
@@ -408,11 +409,8 @@ function playerKeysEvents(event) {
 
     };
   if(event.code === 'Space') {
-      if (event.type === 'keydown' && !PLAYER.move.jump.onAir && PLAYER.move.jump.end){
+      if (event.type === 'keydown' && !PLAYER.move.jump.flag && !PLAYER.position.onAir){
         PLAYER.move.jump.flag = true;
-        PLAYER.move.jump.flagPeak = false;
-        PLAYER.move.jump.end = false;
-
       };
   };
 };
