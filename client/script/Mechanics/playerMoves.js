@@ -202,6 +202,8 @@ function checkGravity() {
 //   };
 // };
 
+test2
+
 function movePlayerViaView(positions, moves, vectors) {
   if (!!moves.forward) {
     vectors.x = Math.sin((180 + PLAYER_VIEW.deg) * PI180) * moves.speed * moves.forward;
