@@ -38,7 +38,7 @@ export const DINAMIC_OBJECTS = [];
 
 
 export const SCENE = new THREE.Scene();
-SCENE.background = new THREE.Color(0x9fd8db);
+SCENE.background = new THREE.Color(0x9fd8db);//0x9fd8db
 export const CAMERA = new THREE.PerspectiveCamera(20, 1, 0.2, 600);
 SCENE.add(CAMERA);
 CAMERA.position.set(50, 50, 50);
@@ -222,6 +222,23 @@ weaponMesh.receiveShadow = true;
 bodyMesh.castShadow = true;
 bodyMesh.receiveShadow = true;
 SCENE.add(userMesh);
+// const userColor = 0x66da87;
+// const userMesh = new THREE.Group();
+// const userLight = new THREE.PointLight(userColor, 1, 5);
+// userLight.castShadow = true;
+// userLight.shadow.mapSize.width = 32; //default
+// userLight.shadow.mapSize.height = 32; //default;
+// userLight.position.y = 1.5;
+// const userBodyGeom = new THREE.IcosahedronBufferGeometry(0.2, 2);
+// const userBodyMaterial = new THREE.MeshBasicMaterial(userColor);
+// const userBody = new THREE.Mesh(userBodyGeom,userBodyMaterial);
+// userBody.position.y = 1.5;
+// userMesh.add(userBody);
+// userMesh.add(userLight);
+// userMesh.castShadow = true;
+// SCENE.add(userMesh);
+
+
 
 
 
