@@ -291,10 +291,10 @@ export const PLAYER = {
     z: 0,
   },
   move: {
-    speed: 0.2,
+    speed: 0.15,
     forward: false, // 1 is forward, -1 is backward;
     sideways: false, // -1 is right, 1 is left
-    rotationSpeed: 15,
+    rotationSpeed: 10,
     jump:{
       flag:false,
       flagPeak:true,

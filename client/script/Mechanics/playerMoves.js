@@ -107,7 +107,7 @@ function checkGravity() {
   } else {
     if (gravity.distance < PLAYER.sizes.h / 3) { //если застрял в объекте который ниже трети тела
       PLAYER.position.onAir = false;
-      PLAYER.position.y = gravity.point.y
+      PLAYER.position.y = gravity.point.y;
       PLAYER.position.block = false;
     } else {
       if (PLAYER.move.jump.flagPeak) {
@@ -117,6 +117,7 @@ function checkGravity() {
           } else {
             PLAYER.position.y = gravity.point.y;
             PLAYER.position.onAir = false;
+
             PLAYER.position.block = false;
           };
         };
@@ -245,13 +246,10 @@ function checkCollision(positions, moves, vectors){
 
   if(footCollision && headCollision){
     positions.block = true;
-    console.log('foot head')
   }else if (footCollision) {
     autoJump();
   }else if(headCollision){
     positions.block = true;
-  }else{
-    positions.block = false;
   };
 };
 
@@ -275,7 +273,7 @@ export function updatePlayerPosition() {
 
     MESH.rotation.y = vectors.deg * PI180;
     if (vectors.deg === positions.deg) { //двигается только когда повернется
-      if (!positions.block) {
+      if (!PLAYER.position.block) {
         if (!!moves.forward || !!moves.sideways) {
           positions.x += vectors.x;
           positions.z += vectors.z;
