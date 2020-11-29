@@ -17,11 +17,11 @@ const PI180 = 0.01745;
 
 const GRAVITY = {
   speed: 0.3,
-}
+};
 
 function MakeVector(from, to) {
   return to.clone().sub(from).normalize();
-}
+};
 
 function PushRay(obj) {
   if (obj.rayDistance === undefined) {
@@ -87,7 +87,7 @@ function checkGravity() {
       };
     }else{
       PLAYER.move.jump.flag = false;
-    }
+    };
   };
 
   const gravityRay = {
@@ -133,76 +133,6 @@ function checkGravity() {
   PLAYER_VIEW.position.y = PLAYER.position.y;
   setCamera();
 };
-
-
-
-
-
-
-// function moveDinamicObject(object, vectors){
-//   const widthRay ={
-//     start:object.position,
-//     end:new THREE.Vector3(object.position.x+vectors.x*10,object.position.y,object.position.z+vectors.z*10),
-//   };
-//   widthRay.direction = makeVector(widthRay.start,widthRay.end).negate();
-//
-//   let objectWidth, objectHeight;
-//
-//
-//
-//   const widthRayCast =  new THREE.Raycaster(widthRay.end, widthRay.direction, 0, 10);
-//   widthRay.intersect = widthRayCast.intersectObject(object);
-//   if(!!widthRay.intersect[0]){
-//     objectWidth = widthRay.end.distanceTo(widthRay.start) - widthRay.intersect[0].distance;
-//   };
-//
-//   const moveCast = {
-//     start:object.position,
-//     end:new THREE.Vector3(object.position.x+vectors.x,object.position.y,object.position.z+vectors.z),
-//   };
-//   moveCast.direction = makeVector(moveCast.start,moveCast.end);
-//
-//
-//
-//   const heightRay ={
-//     start:object.position,
-//     end:new THREE.Vector3(object.position.x,object.position.y-100,object.position.z),
-//   };
-//   heightRay.direction = makeVector(heightRay.end,heightRay.start);
-//
-//   const heightRayCast = new THREE.Raycaster(heightRay.end, heightRay.direction,0,100);
-//   heightRay.intersect = heightRayCast.intersectObject(object);
-//   if(!!heightRay.intersect[0]){
-//     objectHeight = heightRay.end.distanceTo(heightRay.start) - heightRay.intersect[0].distance;
-//   };
-//
-//
-//   const gravityRay = {
-//     start:object.position,
-//     direction:new THREE.Vector3(0,-10,0),
-//   };
-//   const gravityRayCast = new THREE.Raycaster(gravityRay.start,gravityRay.direction,0,10);
-//   gravityRay.intersect = gravityRayCast.intersectObjects(DINAMIC_OBJECTS);
-//   if(!!gravityRay.intersect[0]){
-//     console.log(gravityRay.intersect[0]);
-//   };
-//
-//
-//
-//
-//
-//   const moveRayCast =  new THREE.Raycaster(moveCast.start, moveCast.direction, 0, objectWidth);
-//   moveCast.intersect = moveRayCast.intersectObjects(STATIC_OBJECTS);
-//   if(!!moveCast.intersect[0]){
-//     return true;
-//   }else{
-//     object.position.x += vectors.x;
-//     object.position.z += vectors.z;
-//     return false;
-//   };
-// };
-
-test2
 
 function movePlayerViaView(positions, moves, vectors) {
   if (!!moves.forward) {
@@ -291,6 +221,40 @@ function rotatePlayerByMove(positions, moves, vectors) {
   };
 };
 
+function autoJump(){
+  if (!PLAYER.move.jump.flag && !PLAYER.position.onAir){
+    PLAYER.move.jump.flag = true;
+  };
+};
+
+function checkCollision(positions, moves, vectors){
+  const footRay = {
+    from:MakeMyVector3(positions),
+    to:MakeMyVector3(PLAYER.moveVectorPosition),
+    check: STATIC_OBJECTS,
+  };
+  const footCollision = PushRay(footRay);
+
+  const headRay = {
+    from:MakeMyVector3(positions,0,PLAYER.sizes.h,0),
+    to:MakeMyVector3(PLAYER.moveVectorPosition),
+    check:STATIC_OBJECTS,
+  };
+
+  const headCollision = PushRay(headRay);
+
+  if(footCollision && headCollision){
+    positions.block = true;
+    console.log('foot head')
+  }else if (footCollision) {
+    autoJump();
+  }else if(headCollision){
+    positions.block = true;
+  }else{
+    positions.block = false;
+  };
+};
+
 export function updatePlayerPosition() {
   if (PLAYER.move.sideways || PLAYER.move.forward) {
     const positions = PLAYER.position;
@@ -303,67 +267,8 @@ export function updatePlayerPosition() {
     // ----Rotation----
     rotatePlayerByMove(positions, moves, vectors);
 
-
-
-
-
-    // const moveRayVectorsHead = {
-    //   start:new THREE.Vector3(positions.x,positions.y+PLAYER.sizes.h,positions.z),
-    //   end:new THREE.Vector3(PLAYER.moveVectorPosition.x,positions.y+PLAYER.sizes.h,PLAYER.moveVectorPosition.z),
-    //   intersect:[],
-    // }
-    // moveRayVectorsHead.direction = moveRayVectorsHead.end.clone().sub(moveRayVectorsHead.start).normalize();
-    // const moveRayHead =  new THREE.Raycaster(moveRayVectorsHead.start, moveRayVectorsHead.direction, 0, PLAYER.move.speed*PLAYER.moveVectorPosition.step);
-    // moveRayVectorsHead.intersect = moveRayHead.intersectObjects(STATIC_OBJECTS);
-    // if(!!moveRayVectorsHead.intersect[0]){
-    //   moveBlockFlag = true;
-    // };
-    //
-    //
-    //
-    //
-    // const moveRayVectors = {
-    //   start:new THREE.Vector3(positions.x,positions.y,positions.z),
-    //   end:new THREE.Vector3(PLAYER.moveVectorPosition.x,PLAYER.moveVectorPosition.y,PLAYER.moveVectorPosition.z),
-    //   intersect:[],
-    // }
-    // moveRayVectors.direction = moveRayVectors.end.clone().sub(moveRayVectors.start).normalize();
-    //
-    // const moveRay =  new THREE.Raycaster(moveRayVectors.start, moveRayVectors.direction, 0, PLAYER.move.speed*PLAYER.moveVectorPosition.step);
-    // moveRayVectors.intersect = moveRay.intersectObjects(STATIC_OBJECTS);
-    // if(!!moveRayVectors.intersect[0]){
-    //
-    //   const moveRayMiddleVectors = {
-    //     start:new THREE.Vector3(positions.x,positions.y+PLAYER.move.jump.autoJumpHeight,positions.z),
-    //     end:new THREE.Vector3(PLAYER.moveVectorPosition.x,PLAYER.moveVectorPosition.y,PLAYER.moveVectorPosition.z),
-    //     intersect:[],
-    //   }
-    //   moveRayMiddleVectors.direction = moveRayMiddleVectors.end.clone().sub(moveRayMiddleVectors.start).normalize();
-    //
-    //   const moveMiddleRay =  new THREE.Raycaster(moveRayMiddleVectors.start, moveRayMiddleVectors.direction, 0, PLAYER.move.speed*PLAYER.moveVectorPosition.step);
-    //   moveRayMiddleVectors.intersect = moveMiddleRay.intersectObjects(STATIC_OBJECTS);
-    //   if(!!moveRayMiddleVectors.intersect[0]){
-    //     moveBlockFlag = true;
-    //   }else{
-    //     autoJump();
-    //   };
-    // };
-    //
-    //
-    // let dinamicObjects = [];
-    // const dinamicObjectsRay = new THREE.Raycaster(moveRayVectors.start, moveRayVectors.direction, 0, PLAYER.move.speed*PLAYER.moveVectorPosition.step);
-    // dinamicObjects = dinamicObjectsRay.intersectObjects(DINAMIC_OBJECTS);
-    // if(!!dinamicObjects[0]){
-    //   moveBlockFlag = moveDinamicObject(dinamicObjects[0].object,vectors);
-    // };
-    //
-    //
-    //
-    //
-    //
-    //
-
-
+    // ----Collision----
+    checkCollision(positions, moves, vectors);
 
     //----Apply----
     const MESH = PLAYER.mesh;

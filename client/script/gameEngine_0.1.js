@@ -317,7 +317,7 @@ export const PLAYER = {
     y: 0,
     z: 0,
     stepAngle: 55, //угол, на который может наступить
-    step: 5, //сколько шагов от него вектор
+    step: 4, //сколько шагов от него вектор
 
   },
   mesh: userMesh,
@@ -456,8 +456,8 @@ updatePlayerPosition();
 function animate() {
   checkMousePosition();
   updatePlayerPosition();
-  composer.render();
-  // RENDERER.render(SCENE, CAMERA);
+  // composer.render();
+  RENDERER.render(SCENE, CAMERA);
   // setTimeout(animate,500);
   requestAnimationFrame(animate);
 }
