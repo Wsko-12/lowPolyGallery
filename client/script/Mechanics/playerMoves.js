@@ -117,7 +117,6 @@ function checkGravity() {
           } else {
             PLAYER.position.y = gravity.point.y;
             PLAYER.position.onAir = false;
-
             PLAYER.position.block = false;
           };
         };
