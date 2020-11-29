@@ -26,8 +26,10 @@ import {
   BokehPass
 } from './libs/ThreeJsLib/examples/jsm/postprocessing/BokehPass.js';
 
+import { GLTFLoader } from './libs/ThreeJsLib/examples/jsm/loaders/GLTFLoader.js';
 
-
+const LOADER = new GLTFLoader();
+let CLOCK = new THREE.Clock();
 
 const PI180 = 0.01745;
 
@@ -74,127 +76,6 @@ ground.receiveShadow = true;
 SCENE.add(ground);
 STATIC_OBJECTS.push(ground);
 
-
-
-for(let i=0;i<20;i++){
-  let boxGeom = new THREE.BoxBufferGeometry(0.5, 1, 3);
-  let box = new THREE.Mesh(boxGeom, material);
-  box.position.x = -0.5*i;
-  box.position.y = 0.5*i;
-
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  STATIC_OBJECTS.push(box);
-};
-
-
-{
-  //box 0.8 height
-  let boxGeom = new THREE.BoxBufferGeometry(3, 0.8, 3);
-  let box = new THREE.Mesh(boxGeom, material);
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  box.position.y = 0.4;
-  box.position.z =-4;
-  box.position.x =5;
-  STATIC_OBJECTS.push(box);
-}
-
-
-{
-  //box 2.5height
-  let boxGeom = new THREE.BoxBufferGeometry(3, 2.5, 3);
-  let box = new THREE.Mesh(boxGeom, material);
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  box.position.y = 1.25;
-  box.position.z =-4;
-  STATIC_OBJECTS.push(box);
-}
-{
-  //box 2.8height
-  let boxGeom = new THREE.BoxBufferGeometry(2, 2.8, 5);
-  let box = new THREE.Mesh(boxGeom, material);
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  box.position.y = 1.4;
-  box.position.z =-4;
-  box.position.x =-2;
-  STATIC_OBJECTS.push(box);
-}
-
-{
-  //box cline
-  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
-  let box = new THREE.Mesh(boxGeom, material);
-  box.rotation.z = 10*PI180;
-  box.position.z = 4;
-  box.position.x = -8;
-  box.position.y = 1;
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  STATIC_OBJECTS.push(box);
-}
-{
-  //box cline
-  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
-  let box = new THREE.Mesh(boxGeom, material);
-  box.rotation.z = 20*PI180;
-  box.position.z = 6;
-  box.position.x = -8;
-  box.position.y = 1;
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  STATIC_OBJECTS.push(box);
-}
-{
-  //box cline
-  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
-  let box = new THREE.Mesh(boxGeom, material);
-  box.rotation.z = 30*PI180;
-  box.position.z = 8;
-  box.position.x = -8;
-  box.position.y = 1;
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  STATIC_OBJECTS.push(box);
-}
-{
-  //box cline
-  let boxGeom = new THREE.BoxBufferGeometry(2, 10, 2);
-  let box = new THREE.Mesh(boxGeom, material);
-  box.rotation.z = 40*PI180;
-  box.position.z = 10;
-  box.position.x = -8;
-  box.position.y = 1.5;
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  STATIC_OBJECTS.push(box);
-}
-
-{
-  //box cline
-  let boxGeom = new THREE.BoxBufferGeometry(1, 1, 1);
-  let box = new THREE.Mesh(boxGeom, material);
-  box.position.z = 2;
-  box.position.x = 2;
-  box.position.y = 0.5;
-  SCENE.add(box);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  DINAMIC_OBJECTS.push(box);
-}
-
-
-
 const sun = new THREE.DirectionalLight(0xffffff, 1);
 sun.castShadow = true;
 sun.position.set(60, 60, 60);
@@ -206,38 +87,30 @@ SCENE.add(sun);
 SCENE.add(sun.target);
 SCENE.add(new THREE.HemisphereLight(0xdffffa, 0x4a4a4a, 0.3));
 
-let userMesh = new THREE.Group();
-let bodyMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.8, 1.8, 0.8), material);
-let weaponMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 1, 0.2), material);
-weaponMesh.rotation.x = Math.PI / 180 * 90;
-weaponMesh.position.x = 0.45;
-weaponMesh.position.z = -0.5;
-bodyMesh.position.y = 0.9;
-weaponMesh.position.y = 0.9;
 
-userMesh.add(bodyMesh);
-userMesh.add(weaponMesh);
-weaponMesh.castShadow = true;
-weaponMesh.receiveShadow = true;
-bodyMesh.castShadow = true;
-bodyMesh.receiveShadow = true;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export let userAnimations;
+const userMesh = new THREE.Group();
+LOADER.load('./models/test.glTF',function(gltf){
+  PLAYER.mixer = new THREE.AnimationMixer( gltf.scene );
+  userAnimations = gltf.animations;
+  PLAYER.body = gltf.scene;
+  userMesh.add(gltf.scene);
+});
 SCENE.add(userMesh);
-// const userColor = 0x66da87;
-// const userMesh = new THREE.Group();
-// const userLight = new THREE.PointLight(userColor, 1, 5);
-// userLight.castShadow = true;
-// userLight.shadow.mapSize.width = 32; //default
-// userLight.shadow.mapSize.height = 32; //default;
-// userLight.position.y = 1.5;
-// const userBodyGeom = new THREE.IcosahedronBufferGeometry(0.2, 2);
-// const userBodyMaterial = new THREE.MeshBasicMaterial(userColor);
-// const userBody = new THREE.Mesh(userBodyGeom,userBodyMaterial);
-// userBody.position.y = 1.5;
-// userMesh.add(userBody);
-// userMesh.add(userLight);
-// userMesh.castShadow = true;
-// SCENE.add(userMesh);
-
 
 
 
@@ -381,7 +254,7 @@ document.addEventListener('keyup', playerKeysEvents);
 
 
 
-
+let flag = false;
 function playerKeysEvents(event) {
 
     switch (event.code) {
@@ -423,10 +296,10 @@ function playerKeysEvents(event) {
       };
     };
     break;
-
     };
   if(event.code === 'Space') {
       if (event.type === 'keydown' && !PLAYER.move.jump.flag && !PLAYER.position.onAir){
+
         PLAYER.move.jump.flag = true;
       };
   };
@@ -471,6 +344,10 @@ animate();
 updatePlayerPosition();
 
 function animate() {
+
+  if ( PLAYER.mixer ) PLAYER.mixer.update( CLOCK.getDelta() );
+
+
   checkMousePosition();
   updatePlayerPosition();
   // composer.render();
