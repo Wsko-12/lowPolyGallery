@@ -2,6 +2,7 @@
 node_modules
 models3d
 node_modules/accepts/README.md
+client/models
 .DS_Store
 .AppleDouble
 .LSOverride

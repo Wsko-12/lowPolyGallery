@@ -7,6 +7,7 @@ import {
   DINAMIC_OBJECTS,
   SCENE,
   vectorMesh,
+  userAnimations,
 } from '../gameEngine_0.1.js';
 import * as THREE from '../libs/ThreeJsLib/build/three.module.js';
 import {
@@ -18,6 +19,7 @@ const PI180 = 0.01745;
 const GRAVITY = {
   speed: 0.3,
 };
+const MIXER = new THREE.AnimationMixer();
 
 function MakeVector(from, to) {
   return to.clone().sub(from).normalize();
@@ -227,6 +229,20 @@ function autoJump(){
   };
 };
 
+function AnimatePlayer(){
+  if(PLAYER.mixer){
+    if(PLAYER.move.sideways || PLAYER.move.forward){
+      PLAYER.mixer.clipAction(userAnimations[0]).play();
+    }else{
+      PLAYER.mixer.clipAction(userAnimations[0]).stop();
+      PLAYER.mixer.clipAction(userAnimations[1]).play();
+    }
+  };
+};
+
+
+
+
 function checkCollision(positions, moves, vectors){
   const footRay = {
     from:MakeMyVector3(positions),
@@ -274,6 +290,7 @@ export function updatePlayerPosition() {
     if (vectors.deg === positions.deg) { //двигается только когда повернется
       if (!PLAYER.position.block) {
         if (!!moves.forward || !!moves.sideways) {
+
           positions.x += vectors.x;
           positions.z += vectors.z;
           MESH.position.x = positions.x;
@@ -285,6 +302,7 @@ export function updatePlayerPosition() {
     };
     vectorMesh.position.x = PLAYER.moveVectorPosition.x;
     vectorMesh.position.z = PLAYER.moveVectorPosition.z;
-  };
+  }
   checkGravity();
+  AnimatePlayer();
 };
